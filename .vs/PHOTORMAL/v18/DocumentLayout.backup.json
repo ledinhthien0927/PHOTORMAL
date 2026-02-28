@@ -1,0 +1,121 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\User\\GitClone\\PHOTORMAL\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{6CB13988-150E-F387-0310-6474FDE1FE71}|Assembly-CSharp.csproj|D:\\User\\GitClone\\PHOTORMAL\\assets\\scripts\\ui\\uimanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6CB13988-150E-F387-0310-6474FDE1FE71}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\ui\\uimanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6CB13988-150E-F387-0310-6474FDE1FE71}|Assembly-CSharp.csproj|d:\\user\\gitclone\\photormal\\assets\\scripts\\core\\player\\interactsystem\\playerinteractor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6CB13988-150E-F387-0310-6474FDE1FE71}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\core\\player\\interactsystem\\playerinteractor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6CB13988-150E-F387-0310-6474FDE1FE71}|Assembly-CSharp.csproj|D:\\User\\GitClone\\PHOTORMAL\\assets\\scripts\\core\\player\\interactsystem\\playerinventory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6CB13988-150E-F387-0310-6474FDE1FE71}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\core\\player\\interactsystem\\playerinventory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6CB13988-150E-F387-0310-6474FDE1FE71}|Assembly-CSharp.csproj|D:\\User\\GitClone\\PHOTORMAL\\assets\\scripts\\core\\items\\pickupitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6CB13988-150E-F387-0310-6474FDE1FE71}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\core\\items\\pickupitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6CB13988-150E-F387-0310-6474FDE1FE71}|Assembly-CSharp.csproj|D:\\User\\GitClone\\PHOTORMAL\\assets\\scripts\\core\\items\\cameraitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6CB13988-150E-F387-0310-6474FDE1FE71}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\core\\items\\cameraitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6CB13988-150E-F387-0310-6474FDE1FE71}|Assembly-CSharp.csproj|D:\\User\\GitClone\\PHOTORMAL\\assets\\scripts\\core\\player\\interactsystem\\itemuse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6CB13988-150E-F387-0310-6474FDE1FE71}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\core\\player\\interactsystem\\itemuse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 5,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "CameraItem.cs",
+              "DocumentMoniker": "D:\\User\\GitClone\\PHOTORMAL\\Assets\\Scripts\\Core\\Items\\CameraItem.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Core\\Items\\CameraItem.cs",
+              "ToolTip": "D:\\User\\GitClone\\PHOTORMAL\\Assets\\Scripts\\Core\\Items\\CameraItem.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Core\\Items\\CameraItem.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-25T16:57:46.759Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ItemUse.cs",
+              "DocumentMoniker": "D:\\User\\GitClone\\PHOTORMAL\\Assets\\Scripts\\Core\\Player\\InteractSystem\\ItemUse.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Core\\Player\\InteractSystem\\ItemUse.cs",
+              "ToolTip": "D:\\User\\GitClone\\PHOTORMAL\\Assets\\Scripts\\Core\\Player\\InteractSystem\\ItemUse.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Core\\Player\\InteractSystem\\ItemUse.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAABAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd\u002BUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQ9SURBVEhL7ZVPbJRFFMB/b76vW9ota\u002BkuLYE2lba0BlIItFYhUdSLlIOhRiXSQPBojO2BxAQOBhJjgwmH3UBMNIYABy5NJUazGDQ2JkaFFsUCghT6BwopdFvo7nZbdr95HqBNt2C4eNCkv2Qu8/KbN\u002B/NZAbmmee/jgBcvHExiFD\u002B3UDU/brvG/rG\u002BxhPT1AaWMKLpa\u002BwrXobgfzAUE2oZmi2fOTXI0HPeOXGNcM71\u002B4cAjj6\u002B1F/2qbL01566lbi1sC\u002Bl/dlZjsGQHKk3jimTR0ngiMRdSRiHBuxSkRUI0DEy3ibZ4sAnuPV42ibkpmJpW26HNjlM\u002B6OpQuX\u002BrMNcAF\u002BuflTCEzd6GQsGMoL3R\u002BbHO1CdXxJ/pJnFQ2ej/Xgc3NPzpW7RrpCBq1T4efpud9uny4AswohV41xs42HCY9fPg4oZQVlVAWqksV5Jcfi6eTVkvzitkQ6Hvx2IIqnWZ0B4KvedlQka\u002B5E3wmwgqKodbJiTJ9hzWfLmy0Sfnph\u002BfkXlm2MOmhU3ZxYJpPZ3Hv3yqbB8f5GTzOftFS\u002BtT/hK9x0PTGwuqO3g8HkQC3QKHBaVTsfLrkMaBRhVJVoRaAyVRWoSlmHaHtTe48LMJyKIWoZSd3pPPX2D/tnbejz2i9WjoFdrUIq5uUtyDW8ivCmGEDVJ0ieCs\u002BJsBpAVV0RyUcpFtEyEVSFMUfpA3rMrMUfi3iZbtTswbPR0KJQ0nr2mFppRWkFOaZoUuCkqrSqSivCAVQHFO1C2WOtthpht5emi\u002BmWFoYDzaI2jMjBsdb43rlJ/4nHeUWRQINVGxGlN\u002BNIa/z9eGy288QK/20eubZzWXO45mlrqVerf324/qNLifuJ\u002BsF4//Ivr3QwmBzYoJArUFsYDjQDWGsrBEIKnpvRN9YdXpOoWLRiiim627e29z2xQmupB2lDTOPI2IgfdDsQRgir6g5B/AqNojYsasMi7EKkXJA6DB\u002BDhI3VNieHeqYrLPWXgkBZQenG539c/4G4TtRMTI5qrm/ThdiFxr57fUszpPOCTnAyqclTggxjFBGpfZCM04h0AqiyDKERGEU5KeiECilj9PJMwmcW1aDAYv/ilzI2syYxcffeZHriapG7\u002BN2iBcG68fvjpDXD1g1bU0DHw0HpweJmFTaCdA69N7wXoDRS0mAdrQXpxTr7u985F\u002Bvm3EzHXICmFU2oGi6N/UnPyB/\u002B/vH\u002B7alMKr4quKq8srCKpsrXcY2PU3w/IwK8VtEEIogRDvEpAFuqt6CYB/ffGA5xKMtxAepCDTGEs0Px60/dTN5ibHI0x6otuj1x59rKopXX1hXXUZCTn/VTAKwtqY8ZzFljdCa2trghIehFq9zw1HvkPTQA1m/PqOpuz2qLiG0RS4tV24J6LaLaYtGWyXQ6Olf25fnOWOzu9JSdiaXupQaN2AOuzz1SHa9OZhvzzPN/4G/PM/YuwPWw4gAAAABJRU5ErkJggg==",
+              "WhenOpened": "2026-02-25T16:57:37.701Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "PickupItem.cs",
+              "DocumentMoniker": "D:\\User\\GitClone\\PHOTORMAL\\Assets\\Scripts\\Core\\Items\\PickupItem.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Core\\Items\\PickupItem.cs",
+              "ToolTip": "D:\\User\\GitClone\\PHOTORMAL\\Assets\\Scripts\\Core\\Items\\PickupItem.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Core\\Items\\PickupItem.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-25T17:02:51.682Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "PlayerInventory.cs",
+              "DocumentMoniker": "D:\\User\\GitClone\\PHOTORMAL\\Assets\\Scripts\\Core\\Player\\InteractSystem\\PlayerInventory.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Core\\Player\\InteractSystem\\PlayerInventory.cs",
+              "ToolTip": "D:\\User\\GitClone\\PHOTORMAL\\Assets\\Scripts\\Core\\Player\\InteractSystem\\PlayerInventory.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Core\\Player\\InteractSystem\\PlayerInventory.cs",
+              "ViewState": "AgIAAAQAAAAAAAAAAAA6wA0AAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-25T16:57:37.702Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "PlayerInteractor.cs",
+              "DocumentMoniker": "D:\\User\\GitClone\\PHOTORMAL\\Assets\\Scripts\\Core\\Player\\InteractSystem\\PlayerInteractor.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Core\\Player\\InteractSystem\\PlayerInteractor.cs",
+              "ToolTip": "D:\\User\\GitClone\\PHOTORMAL\\Assets\\Scripts\\Core\\Player\\InteractSystem\\PlayerInteractor.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Core\\Player\\InteractSystem\\PlayerInteractor.cs",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAwwB8AAABDAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-25T16:57:37.705Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "UiManager.cs",
+              "DocumentMoniker": "D:\\User\\GitClone\\PHOTORMAL\\Assets\\Scripts\\UI\\UiManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\UI\\UiManager.cs",
+              "ToolTip": "D:\\User\\GitClone\\PHOTORMAL\\Assets\\Scripts\\UI\\UiManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\UI\\UiManager.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAwwBIAAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-25T16:57:37.708Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
