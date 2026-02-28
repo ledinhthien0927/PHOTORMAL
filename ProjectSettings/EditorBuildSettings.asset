@@ -23,7 +23,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Setting.unity
     guid: 7f9db015fc6e8b846891c7b5c606ba2a
+  - enabled: 1
+    path: Assets/Scenes/Night_01.unity
+    guid: ed185c104d319a14abca3610d8bfd604
   m_configObjects:
-    com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000, guid: 9227e98e4b6e046c5b175924d7b5d070, type: 2}
+    com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000, guid: d6546a123affcd346954c26d4d328225, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
