@@ -31,9 +31,15 @@ public class GameProgress : MonoBehaviour
         CurrentError++;
         OnErrorChanged?.Invoke(CurrentError);
 
-        if (CurrentError >= MaxError)
+        if (CurrentError > MaxError)
         {
-            EventManager.Instance.TriggerEvent("GameOver");
+            // Sai lần thứ 4 (3 lần là tối đa), thua ngay lập tức
+            EventManager.Instance.TriggerEvent("InstantGameOver");
+        }
+        else
+        {
+            // Sai từ lần 1-3, hiện Warning và đếm ngược
+            EventManager.Instance.TriggerEvent("ShowWarningUI");
         }
     }
 
