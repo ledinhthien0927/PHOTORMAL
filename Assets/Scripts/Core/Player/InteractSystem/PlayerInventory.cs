@@ -1,26 +1,29 @@
 using UnityEngine;
 
-public class PlayerInventory : MonoBehaviour
+public sealed class PlayerInventory : MonoBehaviour, IInventory
 {
     public GameObject CurrentObject { get; private set; }
+    public bool HasItem => CurrentObject != null;
 
-    public bool HasItem()
+    public bool TryPick(GameObject obj)
     {
-        return CurrentObject != null;
-    }
+        // Prevent picking if already holding something
+        if (HasItem || obj == null) return false;
 
-    public void Pick(GameObject obj)
-    {
         CurrentObject = obj;
-        //UIManager.Instance.RefreshUI();
+        return true;
     }
 
-    public GameObject Drop()
+    public bool TryDrop(out GameObject obj)
     {
-        GameObject temp = CurrentObject;
-        CurrentObject = null;
-        //UIManager.Instance.RefreshUI();
-        return temp;
-    }
+        if (!HasItem)
+        {
+            obj = null;
+            return false;
+        }
 
+        obj = CurrentObject;
+        CurrentObject = null;
+        return true;
+    }
 }

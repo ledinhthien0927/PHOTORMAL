@@ -1,0 +1,55 @@
+using UnityEngine;
+
+public class LightSwitch : MonoBehaviour, IInteractable
+{
+    [Header("Lights controlled by this switch")]
+    [SerializeField] private Light[] targetLights;
+
+    private bool isOn = true;
+
+    private void Start()
+    {
+        // Auto-find lights in children if none assigned
+        if (targetLights == null || targetLights.Length == 0)
+            targetLights = GetComponentsInChildren<Light>(true);
+
+        SetLights(isOn);
+    }
+
+    // =============================
+    // IInteractable Implementation
+    // =============================
+
+    public string Prompt => isOn ? "Turn off lights" : "Turn on lights";
+
+    public bool CanInteract(IInteractor interactor)
+    {
+        return targetLights != null && targetLights.Length > 0;
+    }
+
+    public void Interact(IInteractor interactor)
+    {
+        Toggle();
+    }
+
+    // =============================
+    // Existing Logic
+    // =============================
+
+    public void Toggle()
+    {
+        isOn = !isOn;
+        SetLights(isOn);
+    }
+
+    private void SetLights(bool state)
+    {
+        if (targetLights == null) return;
+
+        for (int i = 0; i < targetLights.Length; i++)
+        {
+            if (targetLights[i] != null)
+                targetLights[i].enabled = state;
+        }
+    }
+}
