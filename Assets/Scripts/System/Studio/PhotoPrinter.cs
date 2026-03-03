@@ -1,16 +1,31 @@
+using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class PhotoPrinter : MonoBehaviour
+public sealed class PhotoPrinter : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [SerializeField] private RawImage previewImage;
+    [SerializeField] private GameObject previewRoot;
+
+    public void ShowPreview(PhotoRecord record, float seconds)
     {
-        
+        if (record == null || record.texture == null) return;
+
+        if (previewImage != null)
+            previewImage.texture = record.texture;
+
+        if (previewRoot != null)
+            previewRoot.SetActive(true);
+
+        StopAllCoroutines();
+        StartCoroutine(HideAfter(seconds));
     }
 
-    // Update is called once per frame
-    void Update()
+    private IEnumerator HideAfter(float seconds)
     {
-        
+        yield return new WaitForSeconds(seconds);
+
+        if (previewRoot != null)
+            previewRoot.SetActive(false);
     }
 }
