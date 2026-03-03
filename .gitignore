@@ -20,3 +20,8 @@ UserSettings/
 *.mdb
 *.opendb
 *.VC.db
+
+.vs/
+.vscode/
+ExportedObj/
+.consulo/
