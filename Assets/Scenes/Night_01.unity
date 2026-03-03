@@ -1107,6 +1107,8 @@ MonoBehaviour:
   IsFlickering: 0
   IsFootstepActive: 0
   IsClownAppeared: 0
+  HasTwinsAppeared: 0
+  IsLivingRoomLightOn: 1
   IsBackDoorLocked: 1
   IsPlayerInToilet: 0
   StudioEnterTime: 0
