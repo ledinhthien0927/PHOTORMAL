@@ -6,7 +6,9 @@ public sealed class CameraController : MonoBehaviour
     [SerializeField] private int width = 512;
     [SerializeField] private int height = 512;
 
-    // IMPORTANT: this method now returns via callback because it waits for end of frame
+    [Header("UI To Hide While Shooting")]
+    [SerializeField] private GameObject uiRoot; // Assign your main UI canvas root
+
     public void CapturePhoto(System.Action<Texture2D> onDone)
     {
         StartCoroutine(CaptureRoutine(onDone));
@@ -14,13 +16,18 @@ public sealed class CameraController : MonoBehaviour
 
     private IEnumerator CaptureRoutine(System.Action<Texture2D> onDone)
     {
-        // Wait until the frame is fully rendered
+        // Hide UI before capture
+        if (uiRoot != null)
+            uiRoot.SetActive(false);
+
         yield return new WaitForEndOfFrame();
 
-        // Capture the screen (player POV)
         Texture2D tex = ScreenCapture.CaptureScreenshotAsTexture();
 
-        // Optional: resize to width/height (fast nearest-neighbor)
+        // Restore UI immediately
+        if (uiRoot != null)
+            uiRoot.SetActive(true);
+
         Texture2D resized = Resize(tex, width, height);
         Destroy(tex);
 
@@ -30,7 +37,6 @@ public sealed class CameraController : MonoBehaviour
     private Texture2D Resize(Texture2D src, int w, int h)
     {
         Texture2D dst = new Texture2D(w, h, TextureFormat.RGB24, false);
-        Color[] pixels = new Color[w * h];
 
         for (int y = 0; y < h; y++)
         {
@@ -38,11 +44,10 @@ public sealed class CameraController : MonoBehaviour
             for (int x = 0; x < w; x++)
             {
                 int sx = Mathf.FloorToInt((float)x / w * src.width);
-                pixels[y * w + x] = src.GetPixel(sx, sy);
+                dst.SetPixel(x, y, src.GetPixel(sx, sy));
             }
         }
 
-        dst.SetPixels(pixels);
         dst.Apply();
         return dst;
     }
