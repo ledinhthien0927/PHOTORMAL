@@ -37,4 +37,14 @@ public static class GameEventAPI
     
     /// Khi Player bấm nút "Call Support" trên màn hình khi bị lỗi
     public static Action OnCallSupportClicked;
+
+    // ==========================================
+    // MONEY SYSTEM
+    // ==========================================
+
+    /// Yêu cầu cộng tiền
+    public static Action<int> OnAddMoney;
+
+    /// Yêu cầu trừ tiền
+    public static Action<int> OnSpendMoney;
 }

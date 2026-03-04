@@ -25,7 +25,9 @@ public class NightManager : MonoBehaviour
     public void CheckTarget()
     {
         int night = GameProgress.Instance.CurrentNight;
-        int target = targets[night - 1];
+
+        int index = Mathf.Clamp(night - 1, 0, targets.Length - 1);
+        int target = targets[index];
 
         if (GameProgress.Instance.CurrentMoney >= target)
         {
