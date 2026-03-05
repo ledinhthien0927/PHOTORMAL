@@ -15,17 +15,54 @@ public class GameProgress : MonoBehaviour
     public Action<int> OnErrorChanged;
     public Action<int> OnNightChanged;
 
+    private void OnEnable()
+    {
+        GameEventAPI.OnAddMoney += AddMoney;
+        GameEventAPI.OnSpendMoney += SpendMoney;
+    }
+
+    private void OnDisable()
+    {
+        GameEventAPI.OnAddMoney -= AddMoney;
+        GameEventAPI.OnSpendMoney -= SpendMoney;
+    }
+
     private void Awake()
     {
         Instance = this;
     }
 
-    public void AddMoney(int amount)
+    // =============================
+    // MONEY SYSTEM
+    // =============================
+
+    private void AddMoney(int amount)
     {
+        if (amount <= 0) return;
+
         CurrentMoney += amount;
+        OnMoneyChanged?.Invoke(CurrentMoney);
+
+        NightManager.Instance.CheckTarget();
+    }
+
+    private void SpendMoney(int amount)
+    {
+        if (amount <= 0) return;
+
+        if (CurrentMoney < amount)
+        {
+            EventManager.Instance.TriggerEvent("NotEnoughMoney");
+            return;
+        }
+
+        CurrentMoney -= amount;
         OnMoneyChanged?.Invoke(CurrentMoney);
     }
 
+    // =============================
+    // ERROR SYSTEM
+    // =============================
     public void AddError()
     {
         CurrentError++;
