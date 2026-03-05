@@ -10,8 +10,8 @@ public class ClownEvent : MonoBehaviour, IGameEvent
             RuleContext.Instance.IsClownAppeared = true;
             Debug.Log("Sự kiện: Tên hề đứng ở cửa sau! (Mở cửa trong 5s)");
             
-            // Render model thằng hề hoặc kích hoạt âm thanh ở cửa sau
-            // EventManager.Instance.TriggerEvent("SpawnClown");
+            // Gọi ra API hệ thống để báo cho Coder B Spawn model Thằng hề ngoài cửa, phát âm thanh
+            GameEventAPI.OnClownAppeared?.Invoke();
         }
     }
 

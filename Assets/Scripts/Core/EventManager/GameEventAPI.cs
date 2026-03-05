@@ -47,4 +47,37 @@ public static class GameEventAPI
 
     /// Yêu cầu trừ tiền
     public static Action<int> OnSpendMoney;
+
+    // ==========================================
+    // CÁC SỰ KIỆN TỪ HỆ THỐNG (SYSTEM EVENTS)
+    // ==========================================
+    
+    // Coder B đăng ký (subscribe) các sự kiện này để bật/tắt hiệu ứng, model, âm thanh
+
+    /// Sự kiện: Đèn studio bắt đầu/ngừng nhấp nháy
+    public static Action<bool> OnStudioLightFlicker;
+
+    /// Sự kiện: Cặp song sinh xuất hiện/biến mất
+    public static Action<bool> OnTwinsPresenceChanged;
+
+    /// Sự kiện: Bắt đầu/Kết thúc tiếng bước chân
+    public static Action<bool> OnFootstepToggled;
+
+    /// Sự kiện: Tên hề xuất hiện ở cửa sau
+    public static Action OnClownAppeared;
+
+    /// Sự kiện: Tên hề biến mất (khi kịp mở cửa)
+    public static Action OnClownDisappeared;
+
+    /// Sự kiện: Tên hề Jumpscare (khi không kịp mở cửa)
+    public static Action OnClownJumpscare;
+
+    /// Sự kiện: Có người giao hàng gõ cửa
+    public static Action OnDeliveryKnock;
+
+    /// Sự kiện: Gọi khi Player nhặt cục hàng giao đến
+    public static Action OnPlayerPickUpDelivery;
+
+    /// Sự kiện: Khi Player vi phạm bất kỳ luật nào (để Coder B phát hiệu ứng nhiễu màn hình)
+    public static Action OnRuleBroken;
 }

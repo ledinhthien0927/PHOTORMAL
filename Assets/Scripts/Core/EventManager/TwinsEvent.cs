@@ -19,8 +19,8 @@ public class TwinsEvent : MonoBehaviour, IGameEvent
         RuleContext.Instance.HasTwinsAppeared = true;
         Debug.Log("Sự kiện: Cặp song sinh xuất hiện (Tắt đèn ngay!)");
 
-        // Gọi event spawn model cặp sinh đôi ra phòng khách
-        // EventManager.Instance.TriggerEvent("SpawnTwins");
+        // Gọi ra event để Coder B spawn model cặp sinh đôi
+        GameEventAPI.OnTwinsPresenceChanged?.Invoke(true);
 
         float elapsed = 0f;
 
@@ -39,8 +39,8 @@ public class TwinsEvent : MonoBehaviour, IGameEvent
             Debug.Log("Lỗi: Không tắt đèn khi cặp song sinh xuất hiện!");
             RuleContext.Instance.HasTwinsAppeared = false;
             
-            // Xóa cặp song sinh
-            EventManager.Instance.TriggerEvent("DespawnTwins");
+            // Xóa cặp song sinh thông qua API Coder B
+            GameEventAPI.OnTwinsPresenceChanged?.Invoke(false);
 
             // Phạt lỗi
             GameProgress.Instance.AddError();

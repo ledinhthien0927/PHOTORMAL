@@ -15,11 +15,15 @@ public class FootstepEvent : MonoBehaviour, IGameEvent
         RuleContext.Instance.IsFootstepActive = true;
         Debug.Log("Sự kiện: Tiếng bước chân bắt đầu (Nấp vào WC!)");
 
-        // Có thể gọi AudioManager.PlayFootstep() tại đây
+        // Gọi API để Coder B phát âm thanh tiếng bước chân
+        GameEventAPI.OnFootstepToggled?.Invoke(true);
 
         yield return new WaitForSeconds(duration);
 
         RuleContext.Instance.IsFootstepActive = false;
+        
+        // Gọi API để tắt tiếng bước chân
+        GameEventAPI.OnFootstepToggled?.Invoke(false);
         Debug.Log("Sự kiện: Tiếng bước chân kết thúc.");
     }
 
