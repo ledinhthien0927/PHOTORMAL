@@ -4,14 +4,13 @@ public class Test : MonoBehaviour
 {
     private void Update()
     {
-        // Bấm P = chụp ảnh
+        // ================= PLAYER ACTIONS =================
         if (Input.GetKeyDown(KeyCode.P))
         {
             Debug.Log("Test: Shoot Photo");
             GameEventAPI.OnPlayerShootPhoto?.Invoke();
         }
 
-        // Bấm L = bật/tắt đèn phòng khách
         if (Input.GetKeyDown(KeyCode.L))
         {
             bool newState = !RuleContext.Instance.IsLivingRoomLightOn;
@@ -19,7 +18,6 @@ public class Test : MonoBehaviour
             Debug.Log("Test: Toggle Living Room Light: " + newState);
         }
 
-        // Bấm B = mở/khóa cửa sau
         if (Input.GetKeyDown(KeyCode.B))
         {
             bool newState = !RuleContext.Instance.IsBackDoorLocked;
@@ -27,29 +25,59 @@ public class Test : MonoBehaviour
             Debug.Log("Test: Back Door Lock: " + newState);
         }
 
-        // Bấm F = giả lập đèn flicker
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-            EventManager.Instance.TriggerEvent("Flicker");
-        }
-
-        // Bấm T = giả lập tiếng bước chân
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            RuleContext.Instance.IsFootstepActive = true;
-            Debug.Log("Test: Footstep Started");
-        }
-
-        // Bấm Y = vào toilet
         if (Input.GetKeyDown(KeyCode.Y))
         {
+            Debug.Log("Test: Enter Toilet");
             GameEventAPI.OnPlayerToiletStateChanged?.Invoke(true);
         }
 
-        // Bấm U = ra toilet
         if (Input.GetKeyDown(KeyCode.U))
         {
+            Debug.Log("Test: Exit Toilet");
             GameEventAPI.OnPlayerToiletStateChanged?.Invoke(false);
+        }
+
+        if (Input.GetKeyDown(KeyCode.O))
+        {
+            Debug.Log("Test: Mở cửa cho Tên Hề");
+            GameEventAPI.OnPlayerOpenedDoorForClown?.Invoke();
+        }
+
+        if (Input.GetKeyDown(KeyCode.I))
+        {
+            Debug.Log("Test: Nhận hàng giao đến");
+            GameEventAPI.OnPlayerPickUpDelivery?.Invoke();
+        }
+
+        // ================= SYSTEM EVENTS =================
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            Debug.Log("Test: Kích hoạt nháy đèn");
+            EventManager.Instance.TriggerEvent("FlickerLight");
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            Debug.Log("Test: Kích hoạt sự kiện Sinh Đôi");
+            EventManager.Instance.TriggerEvent("Twins");
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            Debug.Log("Test: Kích hoạt tiếng bước chân");
+            EventManager.Instance.TriggerEvent("Footstep");
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha4))
+        {
+            Debug.Log("Test: Kích hoạt sự kiện Tên Hề");
+            EventManager.Instance.TriggerEvent("Clown");
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha5))
+        {
+            Debug.Log("Test: Kích hoạt sự kiện Giao Hàng");
+            EventManager.Instance.TriggerEvent("Delivery");
         }
     }
 }

@@ -19,6 +19,9 @@ public class RuleManager : MonoBehaviour
     
     // Lưu tạm thời gian Clown xuất hiện để đếm ngược 5s Instant GameOver
     private float clownPatienceTimer = 0f;
+    
+    // Lưu tạm thời gian mở cửa giao hàng để đếm ngược bắt lỗi
+    private float backDoorOpenTimer = 0f;
 
     private void Awake()
     {
@@ -34,6 +37,7 @@ public class RuleManager : MonoBehaviour
         GameEventAPI.OnPlayerOpenedDoorForClown += HandleClownDoorOpened;
         GameEventAPI.OnPlayerStudioStateChanged += HandleStudioState;
         GameEventAPI.OnPlayerToiletStateChanged += HandleToiletState;
+        GameEventAPI.OnPlayerPickUpDelivery += HandlePlayerPickUpDelivery;
     }
 
     private void OnDisable()
@@ -45,6 +49,7 @@ public class RuleManager : MonoBehaviour
         GameEventAPI.OnPlayerOpenedDoorForClown -= HandleClownDoorOpened;
         GameEventAPI.OnPlayerStudioStateChanged -= HandleStudioState;
         GameEventAPI.OnPlayerToiletStateChanged -= HandleToiletState;
+        GameEventAPI.OnPlayerPickUpDelivery -= HandlePlayerPickUpDelivery;
     }
 
     public void SetupRules(int night)
@@ -88,11 +93,25 @@ public class RuleManager : MonoBehaviour
 
         if (!activeRules.Contains(RuleType.BackDoorLocked)) return;
 
-        // Nếu vừa mở khóa (thùng hàng) mà k khóa lại ngay (hoặc mở ngoài ý muốn)
-        // Check có thể đợi vài giây, nhưng document kêu "luôn được khóa".
-        if (!isLocked && !RuleContext.Instance.IsClownAppeared)
+        if (!isLocked)
         {
-            BreakRule(RuleType.BackDoorLocked);
+            backDoorOpenTimer = 0f; // Bắt đầu đếm thời gian mở cửa
+
+            // Nếu không có tên hề và không có hàng giao -> Mở ngoài ý muốn -> Bắt lỗi ngay
+            if (!RuleContext.Instance.IsClownAppeared && !RuleContext.Instance.IsDeliveryWaiting)
+            {
+                BreakRule(RuleType.BackDoorLocked);
+            }
+        }
+    }
+
+    private void HandlePlayerPickUpDelivery()
+    {
+        if (RuleContext.Instance.IsDeliveryWaiting)
+        {
+            RuleContext.Instance.IsDeliveryWaiting = false;
+            Debug.Log("Player đã nhận hàng thành công. Hãy nhớ khóa cửa!");
+            // Coder B có thể thêm logic lấy hàng thành công ở đây
         }
     }
 
@@ -107,8 +126,11 @@ public class RuleManager : MonoBehaviour
         {
              // Đúng rule: đã tắt đèn -> Cặp song sinh biến mất
              RuleContext.Instance.HasTwinsAppeared = false;
-             // Gọi event xóa NPC song sinh trên Scene (nếu có spawner)
-             EventManager.Instance.TriggerEvent("DespawnTwins");
+             
+             // Kích hoạt API hệ thống cho Coder B xử lý hiệu ứng biến mất
+             GameEventAPI.OnTwinsPresenceChanged?.Invoke(false);
+             
+             // EventManager.Instance.TriggerEvent("DespawnTwins");
              Debug.Log("Đã tắt đèn, cặp song sinh biến mất.");
         }
     }
@@ -124,8 +146,10 @@ public class RuleManager : MonoBehaviour
             RuleContext.Instance.IsClownAppeared = false; 
             clownPatienceTimer = 0f;
             Debug.Log("Đã mở cửa cho hề kịp thời.");
-            // Gọi Event cho hề biến đi
-            EventManager.Instance.TriggerEvent("ClownDisappears");
+            
+            // Gọi Event cho hề biến đi để Coder B gỡ model
+            GameEventAPI.OnClownDisappeared?.Invoke();
+            // EventManager.Instance.TriggerEvent("ClownDisappears");
         }
     }
 
@@ -152,6 +176,27 @@ public class RuleManager : MonoBehaviour
         CheckStudioTimeLimit();
         CheckTwinsLight();
         CheckClownDoor();
+        CheckBackDoorTimeout();
+    }
+
+    /// <summary> Quy tắc: Cửa sau luôn khóa. Nếu có hàng đợi, chỉ được mở vài giây. </summary>
+    private void CheckBackDoorTimeout()
+    {
+        if (!activeRules.Contains(RuleType.BackDoorLocked)) return;
+
+        // Nếu người chơi đang mở cửa mà không phải do Hề đang đứng (vì Hề có case riêng)
+        if (!RuleContext.Instance.IsBackDoorLocked && !RuleContext.Instance.IsClownAppeared)
+        {
+            backDoorOpenTimer += Time.deltaTime;
+            
+            // Nếu người chơi đã mở quá 5 giây mà chưa đóng (kể cả trong sự kiện lấy hàng)
+            if (backDoorOpenTimer >= 5f)
+            {
+                BreakRule(RuleType.BackDoorLocked);
+                backDoorOpenTimer = 0f; // Tránh nổ lỗi liên tục
+                // Tùy design, có thể khóa cửa lại tự động hoặc ép player phải khóa.
+            }
+        }
     }
 
     /// <summary> Quy tắc: Vào WC khi có tiếng chân </summary>
@@ -205,8 +250,11 @@ public class RuleManager : MonoBehaviour
 
         if (clownPatienceTimer >= 5f)
         {
-            // Quá 5s k mở -> Jumpscare Instant GameOver (theo design document)
-            EventManager.Instance.TriggerEvent("InstantGameOver");
+            // Quá 5s k mở -> Jumpscare Instant GameOver (theo design document: "chớp tắt đèn, jumpscare")
+            // Coder B sẽ lắng nghe sự kiện này, phát Jumpscare trong vài giây rối gọi GameOver.
+            GameEventAPI.OnClownJumpscare?.Invoke();
+            
+            // EventManager.Instance.TriggerEvent("InstantGameOver");
             RuleContext.Instance.IsClownAppeared = false; // Ngừng lặp
         }
     }
@@ -215,6 +263,10 @@ public class RuleManager : MonoBehaviour
     {
         Debug.Log("Rule Broken: " + rule);
         GameProgress.Instance.AddError();
-        EventManager.Instance.TriggerEvent("RuleBrokenEffect"); 
+        
+        // Gọi API hệ thống để Coder B phát hiệu ứng nhiễu màn hình
+        GameEventAPI.OnRuleBroken?.Invoke();
+        
+        // EventManager.Instance.TriggerEvent("RuleBrokenEffect"); 
     }
 }

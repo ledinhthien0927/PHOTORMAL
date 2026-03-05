@@ -21,7 +21,8 @@ public class EventManager : MonoBehaviour
 
     private void Start()
     {
-        StartCoroutine(EventLoop());
+        // Tắt tạm EventLoop tự động gọi để dễ bề test bằng phím tay
+        // StartCoroutine(EventLoop());
     }
 
     public void RegisterEvent(string id, IGameEvent gameEvent)
