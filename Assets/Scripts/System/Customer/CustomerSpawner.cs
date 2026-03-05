@@ -8,9 +8,16 @@ public class CustomerSpawner : MonoBehaviour
     [Header("Points")]
     public Transform spawnPoint;
     public Transform standByPC;
+    public Transform photoSpot;
 
     [Header("Door Blocker (Collider)")]
     public Collider mainDoorBlocker;
+
+    [Header("Order System")]
+    public PhotoOrderService orderService;
+
+    [Header("Player")]
+    public Transform player;
 
     [Header("Spawn")]
     public bool spawnOnStart = true;
@@ -24,9 +31,9 @@ public class CustomerSpawner : MonoBehaviour
     [ContextMenu("Spawn Normal")]
     public void SpawnNormal()
     {
-        if (!normalCustomerPrefab || !spawnPoint || !standByPC)
+        if (!normalCustomerPrefab || !spawnPoint || !standByPC || !photoSpot)
         {
-            Debug.LogError("[CustomerSpawner] Missing prefab/spawnPoint/standByPC.");
+            Debug.LogError("[CustomerSpawner] Missing prefab/spawnPoint/standByPC/photoSpot.");
             return;
         }
 
@@ -36,7 +43,11 @@ public class CustomerSpawner : MonoBehaviour
             spawnPoint.rotation
         );
 
-        // Initialize flow: wait 5s, check door, then go to PC
-        c.Init(standByPC, mainDoorBlocker);
+        // Initialize movement flow (door check -> go PC)
+        c.Init(standByPC, mainDoorBlocker, photoSpot);
+
+        // Inject order system + player reference (scene objects)
+        c.SetOrderService(orderService);
+        c.SetPlayer(player);
     }
 }
