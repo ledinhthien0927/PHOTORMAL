@@ -23,8 +23,8 @@ public class CustomerController : MonoBehaviour, IInteractable
     public float recheckInterval = 0.5f;
 
     [Header("Popup (World Space)")]
-    public Transform popupAnchor;     // Place this above customer's head
-    public OrderPopupUI popupPrefab;  // Your world-space popup prefab
+    public Transform popupAnchor;
+    public OrderPopupUI popupPrefab;
 
     [Header("Look At Player")]
     public bool lookAtPlayerWhenWaiting = true;
@@ -33,9 +33,6 @@ public class CustomerController : MonoBehaviour, IInteractable
     [Header("Prompt Text")]
     [SerializeField] private string inviteText = "Invite to studio";
     [SerializeField] private string finishText = "Finish session";
-
-    [Header("Debug")]
-    public bool logFlow = true;
 
     private NavMeshAgent agent;
 
@@ -47,28 +44,29 @@ public class CustomerController : MonoBehaviour, IInteractable
 
     private OrderPopupUI popupInstance;
 
-    private PhotoOrderService orderService; // injected by spawner
-    private Transform player;               // injected by spawner
+    private PhotoOrderService orderService;
+    private Transform player;
 
     private PhotoOrder currentOrder;
 
-    // -------- IInteractable --------
+    private bool _notifiedReady;
+
+    // ===== NEW: block finish session until at least one photo is captured =====
+    private bool hasPhotoTaken;
+    private bool listeningPhotoEvent;
+
     public string Prompt
     {
         get
         {
-            // Return UI prompt when player aims at customer (like Door/LightSwitch)
             if (state == CustomerState.WaitingPickupAtPC) return inviteText;
             if (state == CustomerState.WaitingShootDone) return finishText;
-
-            // Empty means PlayerInteractor will hide prompt
             return string.Empty;
         }
     }
 
     public bool CanInteract(IInteractor interactor)
     {
-        // Allow interaction only when it makes sense
         return state == CustomerState.WaitingPickupAtPC
             || state == CustomerState.WaitingShootDone;
     }
@@ -76,18 +74,20 @@ public class CustomerController : MonoBehaviour, IInteractable
     public void Interact(IInteractor interactor)
     {
         if (!CanInteract(interactor)) return;
-
-        // Use the same internal interaction logic
         Interact();
     }
-    // -------------------------------
 
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
     }
 
-    // Called by spawner right after Instantiate
+    private void OnDestroy()
+    {
+        StopListeningPhotoCaptured();
+        NotifyReady(false);
+    }
+
     public void Init(Transform standByPcPoint, Collider mainDoorBlockerCollider, Transform photoSpotPoint)
     {
         standByPC = standByPcPoint;
@@ -98,13 +98,11 @@ public class CustomerController : MonoBehaviour, IInteractable
         StartCoroutine(FlowRoutine());
     }
 
-    // Inject order system from scene
     public void SetOrderService(PhotoOrderService service)
     {
         orderService = service;
     }
 
-    // Inject player transform from scene
     public void SetPlayer(Transform playerTransform)
     {
         player = playerTransform;
@@ -112,64 +110,88 @@ public class CustomerController : MonoBehaviour, IInteractable
 
     private IEnumerator FlowRoutine()
     {
-        if (logFlow) Debug.Log("[Customer] Spawned. Waiting before first door check...");
         yield return new WaitForSeconds(firstCheckDelay);
 
         state = CustomerState.WaitingDoorOpen;
 
-        // Keep waiting until door is open
         while (IsMainDoorClosed())
-        {
-            if (logFlow) Debug.Log("[Customer] Main door is closed. Waiting...");
             yield return new WaitForSeconds(recheckInterval);
-        }
 
-        // Door open => go to PC point
         if (standByPC != null)
         {
             state = CustomerState.GoingToPC;
             agent.isStopped = false;
             agent.SetDestination(standByPC.position);
-
-            if (logFlow) Debug.Log("[Customer] Main door open. Moving to PC...");
         }
     }
 
     void Update()
     {
-        // Arrival handling
         if (state == CustomerState.GoingToPC && ReachedDestination())
         {
             state = CustomerState.WaitingPickupAtPC;
 
             GenerateOrder();
             SpawnPopupForOrder();
-
-            if (logFlow) Debug.Log("[Customer] Arrived at PC. Waiting for pickup.");
         }
         else if (state == CustomerState.GoingToPhotoSpot && ReachedDestination())
         {
             state = CustomerState.WaitingShootDone;
 
-            if (logFlow) Debug.Log("[Customer] Arrived at PhotoSpot. Waiting for shooting done.");
+            // Reset photo flag for this session attempt
+            hasPhotoTaken = false;
+
+            // Customer is READY for photographing
+            NotifyReady(true);
+
+            // Listen for "photo captured" signal
+            StartListeningPhotoCaptured();
         }
         else if (state == CustomerState.ReturningToPC && ReachedDestination())
         {
             state = CustomerState.WaitingPrintAtPC;
-
-            if (logFlow) Debug.Log("[Customer] Back at PC. Waiting for printed photos.");
         }
 
-        // Rotate to face player while waiting
         LookAtPlayer();
+    }
+
+    private void NotifyReady(bool ready)
+    {
+        if (_notifiedReady == ready) return;
+        _notifiedReady = ready;
+
+        if (StudioManager.Instance != null)
+            StudioManager.Instance.NotifyCustomerReady(ready);
+    }
+
+    private void StartListeningPhotoCaptured()
+    {
+        if (listeningPhotoEvent) return;
+
+        StudioManager.OnPhotoCaptured += OnPhotoCaptured;
+        listeningPhotoEvent = true;
+    }
+
+    private void StopListeningPhotoCaptured()
+    {
+        if (!listeningPhotoEvent) return;
+
+        StudioManager.OnPhotoCaptured -= OnPhotoCaptured;
+        listeningPhotoEvent = false;
+    }
+
+    private void OnPhotoCaptured()
+    {
+        // Only accept capture signal while waiting at photo spot
+        if (state != CustomerState.WaitingShootDone) return;
+
+        hasPhotoTaken = true;
     }
 
     private void GenerateOrder()
     {
         if (orderService == null)
         {
-            Debug.LogError("[Customer] OrderService missing (inject it from CustomerSpawner).");
-            // Fallback so popup still shows something
             currentOrder = new PhotoOrder { quantity = 1, size = PhotoSize.Size3x4 };
             return;
         }
@@ -179,88 +201,60 @@ public class CustomerController : MonoBehaviour, IInteractable
 
     private void SpawnPopupForOrder()
     {
-        if (popupPrefab == null || popupAnchor == null)
-        {
-            Debug.LogWarning("[Customer] Popup prefab/anchor missing.");
-            return;
-        }
+        if (popupPrefab == null || popupAnchor == null) return;
 
-        // Avoid duplicate popups
         if (popupInstance != null)
             Destroy(popupInstance.gameObject);
 
         popupInstance = Instantiate(popupPrefab, popupAnchor.position, Quaternion.identity, popupAnchor);
 
-        // If you want pickup only via PlayerInteractor button, set callback = null
-        // popupInstance.Show(currentOrder, null);
-
-        // If you also want clicking popup button to work, keep this:
         popupInstance.Show(currentOrder, () =>
         {
             Interact();
         });
     }
 
-    // Internal interaction entry point (used by popup button OR IInteractable)
     public void Interact()
     {
         if (state == CustomerState.WaitingPickupAtPC)
         {
-            // Hide popup after pickup
             if (popupInstance != null)
                 popupInstance.Hide();
-
-            if (photoSpot == null)
-            {
-                Debug.LogError("[Customer] photoSpot is null.");
-                return;
-            }
 
             state = CustomerState.GoingToPhotoSpot;
             agent.isStopped = false;
             agent.SetDestination(photoSpot.position);
-
-            if (logFlow) Debug.Log("[Customer] Invite confirmed. Going to PhotoSpot.");
             return;
         }
 
         if (state == CustomerState.WaitingShootDone)
         {
-            if (standByPC == null)
-            {
-                Debug.LogError("[Customer] standByPC is null.");
+            // ===== IMPORTANT: block ending session until at least one photo was taken =====
+            if (!hasPhotoTaken)
                 return;
-            }
+
+            // Leaving photo spot: stop being READY + stop listening
+            NotifyReady(false);
+            StopListeningPhotoCaptured();
 
             state = CustomerState.ReturningToPC;
             agent.isStopped = false;
             agent.SetDestination(standByPC.position);
-
-            if (logFlow) Debug.Log("[Customer] Session finished. Returning to PC.");
-            return;
         }
-
-        if (logFlow) Debug.Log($"[Customer] Interact ignored in state: {state}");
     }
 
-    // PC system should call this when printing is correct (quantity & size validated by GameManager later)
     public void OnPhotosDelivered()
     {
-        if (state != CustomerState.WaitingPrintAtPC)
-        {
-            if (logFlow) Debug.Log($"[Customer] OnPhotosDelivered ignored. Current state: {state}");
-            return;
-        }
+        if (state != CustomerState.WaitingPrintAtPC) return;
 
         state = CustomerState.Completed;
 
-        // TODO: reward money here later (or via GameManager)
-        if (logFlow) Debug.Log("[Customer] Photos received. Completing order.");
+        StopListeningPhotoCaptured();
+        NotifyReady(false);
 
         Destroy(gameObject);
     }
 
-    // Expose order for your PC system
     public PhotoOrder GetCurrentOrder()
     {
         return currentOrder;
@@ -268,7 +262,6 @@ public class CustomerController : MonoBehaviour, IInteractable
 
     private bool IsMainDoorClosed()
     {
-        // enabled = closed, disabled = open
         if (mainDoorBlocker == null) return false;
         return mainDoorBlocker.enabled;
     }
@@ -277,8 +270,6 @@ public class CustomerController : MonoBehaviour, IInteractable
     {
         if (agent == null) return false;
         if (agent.pathPending) return false;
-
-        // If path is invalid, do not treat as arrived
         if (agent.pathStatus == NavMeshPathStatus.PathInvalid) return false;
 
         return agent.remainingDistance <= agent.stoppingDistance;
@@ -289,7 +280,6 @@ public class CustomerController : MonoBehaviour, IInteractable
         if (!lookAtPlayerWhenWaiting) return;
         if (player == null) return;
 
-        // Customer should face player in these states
         bool shouldLook =
             state == CustomerState.WaitingPickupAtPC ||
             state == CustomerState.WaitingShootDone ||
@@ -310,14 +300,5 @@ public class CustomerController : MonoBehaviour, IInteractable
             targetRot,
             lookRotateSpeed * Time.deltaTime
         );
-    }
-    private void SetAgentMovement(bool canMove)
-    {
-        // When customer is waiting (standing still), we control rotation manually.
-        // When moving, let NavMeshAgent handle rotation.
-        if (agent == null) return;
-
-        agent.isStopped = !canMove;
-        agent.updateRotation = canMove;
     }
 }

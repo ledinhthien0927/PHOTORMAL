@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public sealed class StudioManager : MonoBehaviour
@@ -22,16 +23,22 @@ public sealed class StudioManager : MonoBehaviour
 
     private float _lastShotTime;
 
+    public static event Action OnPhotoCaptured;
+
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
     }
 
-    // Called by StudioSpotTrigger when player enters/leaves the fixed shooting spot
+    public void NotifyCustomerReady(bool ready)
+    {
+        if (aimValidator != null)
+            aimValidator.SetCustomerReady(ready);
+    }
+
     public void SetPhotoMode(bool enabled, IInteractor interactor)
     {
-        // Check if player is holding the camera item
         bool holdingCamera =
             interactor != null &&
             interactor.Inventory != null &&
@@ -39,7 +46,6 @@ public sealed class StudioManager : MonoBehaviour
             interactor.Inventory.CurrentObject != null &&
             interactor.Inventory.CurrentObject.GetComponent<CameraItemUsable>() != null;
 
-        // Only allow PhotoMode when inside spot AND holding the camera
         bool allowPhotoMode = enabled && holdingCamera;
 
         CurrentMode = allowPhotoMode ? Mode.PhotoMode : Mode.FreeRoam;
@@ -51,7 +57,6 @@ public sealed class StudioManager : MonoBehaviour
             aimValidator.SetEnabled(allowPhotoMode, interactor);
     }
 
-    // Called by the held camera item (IUsable)
     public bool TryTakePhoto(IInteractor interactor)
     {
         if (!CanTakePhoto(interactor)) return false;
@@ -64,6 +69,8 @@ public sealed class StudioManager : MonoBehaviour
 
             var record = photoData.AddPhoto(tex);
             photoPrinter.ShowPreview(record, 1.8f);
+
+            OnPhotoCaptured?.Invoke();
         });
 
         return true;
@@ -73,19 +80,15 @@ public sealed class StudioManager : MonoBehaviour
     {
         if (interactor == null) return false;
 
-        // Must be inside PhotoMode (fixed studio spot)
         if (CurrentMode != Mode.PhotoMode) return false;
 
-        // Cooldown
         if (Time.time - _lastShotTime < shotCooldown) return false;
 
-        // Must hold the camera item
         if (interactor.Inventory == null || !interactor.Inventory.HasItem) return false;
         var held = interactor.Inventory.CurrentObject;
         if (held == null) return false;
         if (held.GetComponent<CameraItemUsable>() == null) return false;
 
-        // Must be "green dot" state
         if (aimValidator != null && !aimValidator.CanShoot) return false;
 
         return true;

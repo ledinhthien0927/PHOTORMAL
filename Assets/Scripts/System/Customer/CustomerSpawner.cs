@@ -43,11 +43,16 @@ public class CustomerSpawner : MonoBehaviour
             spawnPoint.rotation
         );
 
-        // Initialize movement flow (door check -> go PC)
+        // Initialize movement flow (door check -> go PC -> go photo spot...)
         c.Init(standByPC, mainDoorBlocker, photoSpot);
 
         // Inject order system + player reference (scene objects)
         c.SetOrderService(orderService);
         c.SetPlayer(player);
+
+        // NOTE:
+        // In the simplified system, we DO NOT bind spawned customer to StudioManager/AimValidator.
+        // CustomerController will signal READY when it reaches the photo spot.
+        // AimValidator will only check READY + aim at PoseAimZone collider.
     }
 }
