@@ -41,17 +41,13 @@ public class CustomerController : MonoBehaviour, IInteractable
     private Collider mainDoorBlocker;
 
     private CustomerState state;
-
     private OrderPopupUI popupInstance;
 
     private PhotoOrderService orderService;
     private Transform player;
-
     private PhotoOrder currentOrder;
 
-    private bool _notifiedReady;
-
-    // ===== NEW: block finish session until at least one photo is captured =====
+    private bool notifiedReady;
     private bool hasPhotoTaken;
     private bool listeningPhotoEvent;
 
@@ -59,8 +55,12 @@ public class CustomerController : MonoBehaviour, IInteractable
     {
         get
         {
-            if (state == CustomerState.WaitingPickupAtPC) return inviteText;
-            if (state == CustomerState.WaitingShootDone) return finishText;
+            if (state == CustomerState.WaitingPickupAtPC)
+                return inviteText;
+
+            if (state == CustomerState.WaitingShootDone)
+                return finishText;
+
             return string.Empty;
         }
     }
@@ -73,11 +73,13 @@ public class CustomerController : MonoBehaviour, IInteractable
 
     public void Interact(IInteractor interactor)
     {
-        if (!CanInteract(interactor)) return;
+        if (!CanInteract(interactor))
+            return;
+
         Interact();
     }
 
-    void Awake()
+    private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
     }
@@ -125,7 +127,7 @@ public class CustomerController : MonoBehaviour, IInteractable
         }
     }
 
-    void Update()
+    private void Update()
     {
         if (state == CustomerState.GoingToPC && ReachedDestination())
         {
@@ -138,18 +140,22 @@ public class CustomerController : MonoBehaviour, IInteractable
         {
             state = CustomerState.WaitingShootDone;
 
-            // Reset photo flag for this session attempt
+            if (StudioManager.Instance != null)
+                StudioManager.Instance.SetCurrentCustomer(this);
+
             hasPhotoTaken = false;
 
-            // Customer is READY for photographing
             NotifyReady(true);
-
-            // Listen for "photo captured" signal
             StartListeningPhotoCaptured();
         }
         else if (state == CustomerState.ReturningToPC && ReachedDestination())
         {
             state = CustomerState.WaitingPrintAtPC;
+
+            // Printing is only allowed after the session has ended
+            // and the customer has returned to the PC side.
+            if (StudioManager.Instance != null)
+                StudioManager.Instance.UnlockPrinting();
         }
 
         LookAtPlayer();
@@ -157,8 +163,10 @@ public class CustomerController : MonoBehaviour, IInteractable
 
     private void NotifyReady(bool ready)
     {
-        if (_notifiedReady == ready) return;
-        _notifiedReady = ready;
+        if (notifiedReady == ready)
+            return;
+
+        notifiedReady = ready;
 
         if (StudioManager.Instance != null)
             StudioManager.Instance.NotifyCustomerReady(ready);
@@ -166,7 +174,8 @@ public class CustomerController : MonoBehaviour, IInteractable
 
     private void StartListeningPhotoCaptured()
     {
-        if (listeningPhotoEvent) return;
+        if (listeningPhotoEvent)
+            return;
 
         StudioManager.OnPhotoCaptured += OnPhotoCaptured;
         listeningPhotoEvent = true;
@@ -174,7 +183,8 @@ public class CustomerController : MonoBehaviour, IInteractable
 
     private void StopListeningPhotoCaptured()
     {
-        if (!listeningPhotoEvent) return;
+        if (!listeningPhotoEvent)
+            return;
 
         StudioManager.OnPhotoCaptured -= OnPhotoCaptured;
         listeningPhotoEvent = false;
@@ -182,8 +192,8 @@ public class CustomerController : MonoBehaviour, IInteractable
 
     private void OnPhotoCaptured()
     {
-        // Only accept capture signal while waiting at photo spot
-        if (state != CustomerState.WaitingShootDone) return;
+        if (state != CustomerState.WaitingShootDone)
+            return;
 
         hasPhotoTaken = true;
     }
@@ -192,7 +202,11 @@ public class CustomerController : MonoBehaviour, IInteractable
     {
         if (orderService == null)
         {
-            currentOrder = new PhotoOrder { quantity = 1, size = PhotoSize.Size3x4 };
+            currentOrder = new PhotoOrder
+            {
+                quantity = 1,
+                size = PhotoSize.Size3x4
+            };
             return;
         }
 
@@ -201,12 +215,18 @@ public class CustomerController : MonoBehaviour, IInteractable
 
     private void SpawnPopupForOrder()
     {
-        if (popupPrefab == null || popupAnchor == null) return;
+        if (popupPrefab == null || popupAnchor == null)
+            return;
 
         if (popupInstance != null)
             Destroy(popupInstance.gameObject);
 
-        popupInstance = Instantiate(popupPrefab, popupAnchor.position, Quaternion.identity, popupAnchor);
+        popupInstance = Instantiate(
+            popupPrefab,
+            popupAnchor.position,
+            Quaternion.identity,
+            popupAnchor
+        );
 
         popupInstance.Show(currentOrder, () =>
         {
@@ -229,13 +249,16 @@ public class CustomerController : MonoBehaviour, IInteractable
 
         if (state == CustomerState.WaitingShootDone)
         {
-            // ===== IMPORTANT: block ending session until at least one photo was taken =====
             if (!hasPhotoTaken)
                 return;
 
-            // Leaving photo spot: stop being READY + stop listening
             NotifyReady(false);
             StopListeningPhotoCaptured();
+
+            // Session ended, but printing is still locked
+            // until the customer reaches the PC side again.
+            if (StudioManager.Instance != null)
+                StudioManager.Instance.LockPrinting();
 
             state = CustomerState.ReturningToPC;
             agent.isStopped = false;
@@ -245,12 +268,19 @@ public class CustomerController : MonoBehaviour, IInteractable
 
     public void OnPhotosDelivered()
     {
-        if (state != CustomerState.WaitingPrintAtPC) return;
+        if (state != CustomerState.WaitingPrintAtPC)
+            return;
 
         state = CustomerState.Completed;
 
         StopListeningPhotoCaptured();
         NotifyReady(false);
+
+        if (StudioManager.Instance != null)
+        {
+            StudioManager.Instance.ClearCurrentCustomer();
+            StudioManager.Instance.ClearCurrentPrintPhotoData();
+        }
 
         Destroy(gameObject);
     }
@@ -262,23 +292,33 @@ public class CustomerController : MonoBehaviour, IInteractable
 
     private bool IsMainDoorClosed()
     {
-        if (mainDoorBlocker == null) return false;
+        if (mainDoorBlocker == null)
+            return false;
+
         return mainDoorBlocker.enabled;
     }
 
     private bool ReachedDestination()
     {
-        if (agent == null) return false;
-        if (agent.pathPending) return false;
-        if (agent.pathStatus == NavMeshPathStatus.PathInvalid) return false;
+        if (agent == null)
+            return false;
+
+        if (agent.pathPending)
+            return false;
+
+        if (agent.pathStatus == NavMeshPathStatus.PathInvalid)
+            return false;
 
         return agent.remainingDistance <= agent.stoppingDistance;
     }
 
     private void LookAtPlayer()
     {
-        if (!lookAtPlayerWhenWaiting) return;
-        if (player == null) return;
+        if (!lookAtPlayerWhenWaiting)
+            return;
+
+        if (player == null)
+            return;
 
         bool shouldLook =
             state == CustomerState.WaitingPickupAtPC ||
@@ -286,19 +326,41 @@ public class CustomerController : MonoBehaviour, IInteractable
             state == CustomerState.WaitingPrintAtPC ||
             state == CustomerState.GoingToPhotoSpot;
 
-        if (!shouldLook) return;
+        if (!shouldLook)
+            return;
 
-        Vector3 dir = player.position - transform.position;
-        dir.y = 0f;
+        Vector3 direction = player.position - transform.position;
+        direction.y = 0f;
 
-        if (dir.sqrMagnitude < 0.001f) return;
+        if (direction.sqrMagnitude < 0.001f)
+            return;
 
-        Quaternion targetRot = Quaternion.LookRotation(dir.normalized, Vector3.up);
+        Quaternion targetRotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
 
         transform.rotation = Quaternion.RotateTowards(
             transform.rotation,
-            targetRot,
+            targetRotation,
             lookRotateSpeed * Time.deltaTime
         );
+    }
+
+    public void ReceivePrintedPhoto(PrintPhotoData printData)
+    {
+        if (printData == null)
+            return;
+
+        string photoId = "NULL";
+
+        if (printData.PhotoRecord != null)
+            photoId = printData.PhotoRecord.id;
+
+        Debug.Log(
+            $"{name} received printed photo | " +
+            $"PhotoId: {photoId} | " +
+            $"Size: {printData.PrintSize} | " +
+            $"Copies: {printData.CopyCount}"
+        );
+
+        OnPhotosDelivered();
     }
 }

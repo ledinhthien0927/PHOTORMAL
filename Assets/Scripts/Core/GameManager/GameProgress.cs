@@ -32,37 +32,41 @@ public class GameProgress : MonoBehaviour
         Instance = this;
     }
 
-    // =============================
-    // MONEY SYSTEM
-    // =============================
-
-    private void AddMoney(int amount)
+    public void AddMoney(int amount)
     {
-        if (amount <= 0) return;
+        if (amount <= 0)
+            return;
 
         CurrentMoney += amount;
         OnMoneyChanged?.Invoke(CurrentMoney);
 
-        NightManager.Instance.CheckTarget();
+        if (NightManager.Instance != null)
+            NightManager.Instance.CheckTarget();
     }
 
-    private void SpendMoney(int amount)
+    public bool TrySpendMoney(int amount)
     {
-        if (amount <= 0) return;
+        if (amount <= 0)
+            return true;
 
         if (CurrentMoney < amount)
         {
-            EventManager.Instance.TriggerEvent("NotEnoughMoney");
-            return;
+            if (EventManager.Instance != null)
+                EventManager.Instance.TriggerEvent("NotEnoughMoney");
+
+            return false;
         }
 
         CurrentMoney -= amount;
         OnMoneyChanged?.Invoke(CurrentMoney);
+        return true;
     }
 
-    // =============================
-    // ERROR SYSTEM
-    // =============================
+    private void SpendMoney(int amount)
+    {
+        TrySpendMoney(amount);
+    }
+
     public void AddError()
     {
         CurrentError++;
@@ -70,13 +74,13 @@ public class GameProgress : MonoBehaviour
 
         if (CurrentError > MaxError)
         {
-            // Sai lần thứ 4 (3 lần là tối đa), thua ngay lập tức
-            EventManager.Instance.TriggerEvent("InstantGameOver");
+            if (EventManager.Instance != null)
+                EventManager.Instance.TriggerEvent("InstantGameOver");
         }
         else
         {
-            // Sai từ lần 1-3, hiện Warning và đếm ngược
-            EventManager.Instance.TriggerEvent("ShowWarningUI");
+            if (EventManager.Instance != null)
+                EventManager.Instance.TriggerEvent("ShowWarningUI");
         }
     }
 
@@ -84,6 +88,9 @@ public class GameProgress : MonoBehaviour
     {
         CurrentMoney = 0;
         CurrentError = 0;
+
+        OnMoneyChanged?.Invoke(CurrentMoney);
+        OnErrorChanged?.Invoke(CurrentError);
     }
 
     public void NextNight()
