@@ -19,13 +19,52 @@ public class CustomerSpawner : MonoBehaviour
     [Header("Player")]
     public Transform player;
 
+    [Header("Special Entities (Spectral)")]
+    public GameObject twinsPrefab;
+    public Transform twinsSpawnPoint;
+    public GameObject clownPrefab;
+    public Transform clownSpawnPoint;
+
+    [Header("References")]
+    public EnvironmentEffectController effectController;
+
     [Header("Spawn")]
     public bool spawnOnStart = true;
 
     void Start()
     {
+        SpawnSpecialModels();
+
         if (spawnOnStart)
             SpawnNormal();
+    }
+
+    private void SpawnSpecialModels()
+    {
+        if (effectController == null)
+        {
+            effectController = FindFirstObjectByType<EnvironmentEffectController>();
+        }
+
+        if (effectController == null)
+        {
+            Debug.LogWarning("[CustomerSpawner] EnvironmentEffectController not found in scene.");
+            return;
+        }
+
+        // Spawn Twins
+        if (twinsPrefab != null && twinsSpawnPoint != null)
+        {
+            GameObject twins = Instantiate(twinsPrefab, twinsSpawnPoint.position, twinsSpawnPoint.rotation);
+            effectController.SetTwinsModel(twins);
+        }
+
+        // Spawn Clown
+        if (clownPrefab != null && clownSpawnPoint != null)
+        {
+            GameObject clown = Instantiate(clownPrefab, clownSpawnPoint.position, clownSpawnPoint.rotation);
+            effectController.SetClownModel(clown);
+        }
     }
 
     [ContextMenu("Spawn Normal")]

@@ -2,7 +2,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
-public class WarningManager : MonoBehaviour
+public class WarningManager : MonoBehaviour, IGameEvent
 {
     public static WarningManager Instance;
 
@@ -19,6 +19,20 @@ public class WarningManager : MonoBehaviour
         warningPanel.SetActive(false);
         callSupportButton.onClick.AddListener(OnCallSupportClicked);
     }
+
+    private void Start()
+    {
+        if (EventManager.Instance != null)
+        {
+            EventManager.Instance.RegisterEvent("ShowWarningUI", this);
+        }
+    }
+
+    public void Execute()
+    {
+        ShowWarning();
+    }
+
 
     private void OnEnable()
     {

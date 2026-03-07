@@ -39,45 +39,117 @@ public class Test : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.O))
         {
-            Debug.Log("Test: Mở cửa cho Tên Hề");
+            Debug.Log("Test: Mở cửa cho Tên Hề (Open door for clown)");
             GameEventAPI.OnPlayerOpenedDoorForClown?.Invoke();
         }
 
         if (Input.GetKeyDown(KeyCode.I))
         {
-            Debug.Log("Test: Nhận hàng giao đến");
+            Debug.Log("Test: Nhận hàng giao đến (Pick up delivery)");
             GameEventAPI.OnPlayerPickUpDelivery?.Invoke();
+        }
+        
+        if (Input.GetKeyDown(KeyCode.LeftBracket)) // '['
+        {
+            Debug.Log("Test: Enter Studio");
+            GameEventAPI.OnPlayerStudioStateChanged?.Invoke(true);
+        }
+
+        if (Input.GetKeyDown(KeyCode.RightBracket)) // ']'
+        {
+            Debug.Log("Test: Exit Studio");
+            GameEventAPI.OnPlayerStudioStateChanged?.Invoke(false);
+        }
+
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            Debug.Log("Test: Call Support");
+            GameEventAPI.OnCallSupportClicked?.Invoke();
+        }
+
+        // ================= RESOURCE & PROGRESS =================
+        if (Input.GetKeyDown(KeyCode.M))
+        {
+            Debug.Log("Test: Add Money 100");
+            GameEventAPI.OnAddMoney?.Invoke(100);
+        }
+
+        if (Input.GetKeyDown(KeyCode.N))
+        {
+            Debug.Log("Test: Spend Money 100");
+            GameEventAPI.OnSpendMoney?.Invoke(100);
+        }
+
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            Debug.Log("Test: Force Add Error");
+            if (GameProgress.Instance != null)
+                GameProgress.Instance.AddError();
+        }
+
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            Debug.Log("Test: Skip to Next Night");
+            if (GameProgress.Instance != null && NightManager.Instance != null)
+            {
+                GameProgress.Instance.NextNight();
+                NightManager.Instance.StartNight(GameProgress.Instance.CurrentNight);
+            }
         }
 
         // ================= SYSTEM EVENTS =================
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            Debug.Log("Test: Kích hoạt nháy đèn");
+            Debug.Log("Test: Kích hoạt nháy đèn (FlickerLight)");
             EventManager.Instance.TriggerEvent("FlickerLight");
         }
 
         if (Input.GetKeyDown(KeyCode.Alpha2))
         {
-            Debug.Log("Test: Kích hoạt sự kiện Sinh Đôi");
+            Debug.Log("Test: Kích hoạt sự kiện Sinh Đôi (Twins)");
             EventManager.Instance.TriggerEvent("Twins");
         }
 
         if (Input.GetKeyDown(KeyCode.Alpha3))
         {
-            Debug.Log("Test: Kích hoạt tiếng bước chân");
+            Debug.Log("Test: Kích hoạt tiếng bước chân (Footstep)");
             EventManager.Instance.TriggerEvent("Footstep");
         }
 
         if (Input.GetKeyDown(KeyCode.Alpha4))
         {
-            Debug.Log("Test: Kích hoạt sự kiện Tên Hề");
+            Debug.Log("Test: Kích hoạt sự kiện Tên Hề (Clown)");
             EventManager.Instance.TriggerEvent("Clown");
         }
 
         if (Input.GetKeyDown(KeyCode.Alpha5))
         {
-            Debug.Log("Test: Kích hoạt sự kiện Giao Hàng");
+            Debug.Log("Test: Kích hoạt sự kiện Giao Hàng (Delivery)");
             EventManager.Instance.TriggerEvent("Delivery");
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha6))
+        {
+            Debug.Log("Test: Not Enough Money Event");
+            EventManager.Instance.TriggerEvent("NotEnoughMoney");
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha7))
+        {
+            Debug.Log("Test: Instance Game Over Event (7)");
+            EventManager.Instance.TriggerEvent("InstantGameOver");
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha8))
+        {
+            Debug.Log("Test: Show Warning UI Event (8)");
+            EventManager.Instance.TriggerEvent("ShowWarningUI");
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha9))
+        {
+            Debug.Log("Test: Rule Broken Effect Event (9)");
+            EventManager.Instance.TriggerEvent("RuleBrokenEffect");
         }
     }
 }

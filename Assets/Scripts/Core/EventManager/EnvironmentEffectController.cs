@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class EnvironmentEffectController : MonoBehaviour
+public class EnvironmentEffectController : MonoBehaviour, IGameEvent
 {
     [Header("Studio Lights")]
     [SerializeField] private Light[] studioLights;
@@ -19,6 +19,20 @@ public class EnvironmentEffectController : MonoBehaviour
     [SerializeField] private GameObject staticGlitchEffect; // Hiệu ứng nhiễu màn hình khi vi phạm luật
 
     private Coroutine flickerCoroutine;
+
+    private void Start()
+    {
+        if (EventManager.Instance != null)
+        {
+            EventManager.Instance.RegisterEvent("RuleBrokenEffect", this);
+        }
+    }
+
+    public void Execute()
+    {
+        HandleRuleBroken();
+    }
+
 
     private void OnEnable()
     {
@@ -127,7 +141,7 @@ public class EnvironmentEffectController : MonoBehaviour
         }
     }
 
-    private void HandleRuleBroken()
+    private void HandleRuleBroken() 
     {
         // Khi vi phạm luật: chớp màn hình nhiễu
         if (staticGlitchEffect != null)
@@ -138,8 +152,24 @@ public class EnvironmentEffectController : MonoBehaviour
 
     private IEnumerator ShowGlitchEffectRoutine()
     {
-        staticGlitchEffect.SetActive(true);
+        if (staticGlitchEffect != null) staticGlitchEffect.SetActive(true);
         yield return new WaitForSeconds(0.5f); // Hiện nhiễu trong 0.5s rồi tắt
-        staticGlitchEffect.SetActive(false);
+        if (staticGlitchEffect != null) staticGlitchEffect.SetActive(false);
+    }
+
+    // ==========================================
+    // 4. API CHO SPAWNER GÁN MODEL
+    // ==========================================
+
+    public void SetTwinsModel(GameObject model)
+    {
+        twinsModel = model;
+        if (twinsModel != null) twinsModel.SetActive(false);
+    }
+
+    public void SetClownModel(GameObject model)
+    {
+        clownModel = model;
+        if (clownModel != null) clownModel.SetActive(false);
     }
 }
