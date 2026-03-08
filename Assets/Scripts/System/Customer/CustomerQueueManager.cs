@@ -31,6 +31,9 @@ public class CustomerQueueManager : MonoBehaviour
     [SerializeField] private float initialSpawnDelay = 2f;
 
     [Header("Special Event Probabilities")]
+    [Tooltip("Số khách bình thường tối thiểu đi qua trước khi có thể xuất hiện sự kiện (Twins/Clown)")]
+    [SerializeField] private int minNormalCustomersBeforeEvent = 2;
+
     [Tooltip("Xác suất mỗi 'slot' trong queue được thay bằng sự kiện Twins (0-1)")]
     [Range(0f, 1f)]
     [SerializeField] private float twinsChancePerSlot = 0.20f;
@@ -139,9 +142,12 @@ public class CustomerQueueManager : MonoBehaviour
         for (int i = 0; i < totalSlots; i++)
             entries.Add(new SpawnEntry(SpawnEntryType.Normal));
 
+        // Đảm bảo sự kiện chỉ spawn sau vài khách đầu (vd: minNormalCustomersBeforeEvent = 2)
+        int startIndex = Mathf.Clamp(minNormalCustomersBeforeEvent, 0, totalSlots - 1);
+
         // --- TWINS ---
         bool twinsGuaranteed = false;
-        for (int i = 0; i < entries.Count; i++)
+        for (int i = startIndex; i < entries.Count; i++)
         {
             if (entries[i].Type != SpawnEntryType.Normal) continue;
             if (Random.value < twinsChancePerSlot)
@@ -150,10 +156,10 @@ public class CustomerQueueManager : MonoBehaviour
                 twinsGuaranteed = true;
             }
         }
-        // Guarantee ít nhất 1 lần Twins: chèn vào nửa sau nếu chưa có
+        // Guarantee ít nhất 1 lần Twins: chèn vào nửa sau nếu chưa có (nhưng vẫn phải >= startIndex)
         if (!twinsGuaranteed && entries.Count > 0)
         {
-            int guaranteedIndex = Random.Range(entries.Count / 2, entries.Count);
+            int guaranteedIndex = Mathf.Max(startIndex, Random.Range(entries.Count / 2, entries.Count));
             // Ưu tiên chọn slot Normal
             for (int i = guaranteedIndex; i < entries.Count; i++)
             {
@@ -169,7 +175,7 @@ public class CustomerQueueManager : MonoBehaviour
         if (night >= 3)
         {
             bool clownGuaranteed = false;
-            for (int i = 0; i < entries.Count; i++)
+            for (int i = startIndex; i < entries.Count; i++)
             {
                 if (entries[i].Type != SpawnEntryType.Normal) continue;
                 if (Random.value < clownChancePerSlot)
