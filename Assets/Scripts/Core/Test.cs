@@ -112,7 +112,7 @@ public class Test : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Alpha3))
         {
-            Debug.Log("Test: Kích hoạt tiếng bước chân (Footstep)");
+            Debug.Log("Test: Kích hoạt tiếng bước chân (Footstep - Loop 15s, 5s Grace)");
             EventManager.Instance.TriggerEvent("Footstep");
         }
 
@@ -150,6 +150,21 @@ public class Test : MonoBehaviour
         {
             Debug.Log("Test: Rule Broken Effect Event (9)");
             EventManager.Instance.TriggerEvent("RuleBrokenEffect");
+        }
+
+        // ================= CUSTOMER QUEUE =================
+        if (Input.GetKeyDown(KeyCode.Alpha0))
+        {
+            Debug.Log("Test: Force Spawn Normal Customer (0)");
+            if (CustomerQueueManager.Instance != null)
+                CustomerQueueManager.Instance.ForceSpawnNormal();
+        }
+
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            Debug.Log("Test: Debug Dump Customer Queue (T)");
+            if (CustomerQueueManager.Instance != null)
+                CustomerQueueManager.Instance.DebugDumpQueue();
         }
     }
 }

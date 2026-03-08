@@ -23,6 +23,9 @@ public class RuleManager : MonoBehaviour
     // Lưu tạm thời gian mở cửa giao hàng để đếm ngược bắt lỗi
     private float backDoorOpenTimer = 0f;
 
+    // Lưu tạm thời gian vi phạm tiếng bước chân (người chơi có 5s để vào WC)
+    private float footstepViolationTimer = 0f;
+
     private void Awake()
     {
         Instance = this;
@@ -55,6 +58,9 @@ public class RuleManager : MonoBehaviour
     public void SetupRules(int night)
     {
         activeRules.Clear();
+        clownPatienceTimer = 0f;
+        backDoorOpenTimer = 0f;
+        footstepViolationTimer = 0f;
 
         // Đêm 1
         activeRules.Add(RuleType.NoFlickerShoot);
@@ -97,11 +103,8 @@ public class RuleManager : MonoBehaviour
         {
             backDoorOpenTimer = 0f; // Bắt đầu đếm thời gian mở cửa
 
-            // Nếu không có tên hề và không có hàng giao -> Mở ngoài ý muốn -> Bắt lỗi ngay
-            if (!RuleContext.Instance.IsClownAppeared && !RuleContext.Instance.IsDeliveryWaiting)
-            {
-                BreakRule(RuleType.BackDoorLocked);
-            }
+            // Lưu ý: Không còn gọi BreakRule ngay lập tức ở đây.
+            // CheckBackDoorTimeout sẽ xử lý việc đếm đủ 5 giây mới phạt.
         }
     }
 
@@ -163,6 +166,7 @@ public class RuleManager : MonoBehaviour
 
     private void HandleToiletState(bool isInside)
     {
+        Debug.Log("[RuleManager] Received Toilet State: " + isInside);
         RuleContext.Instance.IsPlayerInToilet = isInside;
     }
 
@@ -204,14 +208,23 @@ public class RuleManager : MonoBehaviour
     {
         if (!activeRules.Contains(RuleType.HideWhenFootstep)) return;
 
-        // Lỗi nếu tiếng chân đang kêu MÀ người chơi KHÔNG ở trong wc
-        // Có thể cần thêm vài giây delay grace-period cho player chạy vào.
-        if (RuleContext.Instance.IsFootstepActive &&
-            !RuleContext.Instance.IsPlayerInToilet)
+        // Nếu tiếng chân đang kêu MÀ người chơi KHÔNG ở trong wc
+        if (RuleContext.Instance.IsFootstepActive && !RuleContext.Instance.IsPlayerInToilet)
         {
-            BreakRule(RuleType.HideWhenFootstep);
-            // Tắt tiếng tránh gọi hàm BreakRule liên tục
-            RuleContext.Instance.IsFootstepActive = false; 
+            footstepViolationTimer += Time.deltaTime;
+
+            // Nếu đứng ngoài quá 5 giây thì mới phạt
+            if (footstepViolationTimer >= 5.0f)
+            {
+                BreakRule(RuleType.HideWhenFootstep);
+                RuleContext.Instance.IsFootstepActive = false; // Tắt trạng thái để không nổ lỗi liên tục
+                footstepViolationTimer = 0f;
+            }
+        }
+        else
+        {
+            // Nếu người chơi đã vào WC hoặc hết tiếng chân -> Reset timer
+            footstepViolationTimer = 0f;
         }
     }
 

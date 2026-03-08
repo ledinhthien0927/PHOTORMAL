@@ -106,6 +106,7 @@ public class EnvironmentEffectController : MonoBehaviour, IGameEvent
     {
         if (footstepAudioSource != null)
         {
+            footstepAudioSource.loop = isPlaying; // Bật loop để âm thanh không bị ngắt giữa chừng
             if (isPlaying) footstepAudioSource.Play();
             else footstepAudioSource.Stop();
         }

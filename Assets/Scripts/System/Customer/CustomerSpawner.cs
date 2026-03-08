@@ -1,9 +1,10 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class CustomerSpawner : MonoBehaviour
 {
-    [Header("Prefab")]
-    public CustomerController normalCustomerPrefab;
+    [Header("Normal Customer Prefabs (Random)")]
+    public List<CustomerController> normalCustomerPrefabs = new List<CustomerController>();
 
     [Header("Points")]
     public Transform spawnPoint;
@@ -28,15 +29,11 @@ public class CustomerSpawner : MonoBehaviour
     [Header("References")]
     public EnvironmentEffectController effectController;
 
-    [Header("Spawn")]
-    public bool spawnOnStart = true;
-
     void Start()
     {
+        // Spawn model đặc biệt (Twins / Clown) ở vị trí ẩn, sẵn sàng khi event kích hoạt.
+        // CustomerQueueManager sẽ điều phối việc spawn khách thông qua BuildQueueForNight().
         SpawnSpecialModels();
-
-        if (spawnOnStart)
-            SpawnNormal();
     }
 
     private void SpawnSpecialModels()
@@ -67,17 +64,23 @@ public class CustomerSpawner : MonoBehaviour
         }
     }
 
-    [ContextMenu("Spawn Normal")]
-    public void SpawnNormal()
+    /// <summary>
+    /// Spawn 1 khách hàng bình thường. Được gọi bởi CustomerQueueManager.
+    /// </summary>
+    [ContextMenu("Spawn Normal Customer")]
+    public void SpawnNormalCustomer()
     {
-        if (!normalCustomerPrefab || !spawnPoint || !standByPC || !photoSpot)
+        if (normalCustomerPrefabs.Count == 0 || !spawnPoint || !standByPC || !photoSpot)
         {
-            Debug.LogError("[CustomerSpawner] Missing prefab/spawnPoint/standByPC/photoSpot.");
+            Debug.LogError("[CustomerSpawner] Missing prefab list/spawnPoint/standByPC/photoSpot.");
             return;
         }
 
+        // Chọn ngẫu nhiên 1 prefab từ danh sách
+        CustomerController prefab = normalCustomerPrefabs[Random.Range(0, normalCustomerPrefabs.Count)];
+
         CustomerController c = Instantiate(
-            normalCustomerPrefab,
+            prefab,
             spawnPoint.position,
             spawnPoint.rotation
         );
@@ -88,10 +91,5 @@ public class CustomerSpawner : MonoBehaviour
         // Inject order system + player reference (scene objects)
         c.SetOrderService(orderService);
         c.SetPlayer(player);
-
-        // NOTE:
-        // In the simplified system, we DO NOT bind spawned customer to StudioManager/AimValidator.
-        // CustomerController will signal READY when it reaches the photo spot.
-        // AimValidator will only check READY + aim at PoseAimZone collider.
     }
 }

@@ -32,6 +32,10 @@ public class LightSwitch : MonoBehaviour, IInteractable
         Toggle();
     }
 
+    [Header("Events (Night 1 Rule)")]
+    [Tooltip("Tick vào ô này nếu đây là công tắc đèn ngoài phòng khách (để báo sự kiện cho RuleManager)")]
+    [SerializeField] private bool isLivingRoomSwitch = false;
+
     // =============================
     // Existing Logic
     // =============================
@@ -40,6 +44,11 @@ public class LightSwitch : MonoBehaviour, IInteractable
     {
         isOn = !isOn;
         SetLights(isOn);
+
+        if (isLivingRoomSwitch)
+        {
+            GameEventAPI.OnLivingRoomLightToggled?.Invoke(isOn);
+        }
     }
 
     private void SetLights(bool state)

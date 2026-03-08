@@ -80,4 +80,8 @@ public static class GameEventAPI
 
     /// Sự kiện: Khi Player vi phạm bất kỳ luật nào (để Coder B phát hiệu ứng nhiễu màn hình)
     public static Action OnRuleBroken;
+
+    /// Sự kiện: Khi 1 khách hàng đã hoàn thành phiên của họ (Destroy). 
+    /// CustomerQueueManager lắng nghe để biết khi nào có thể spawn khách tiếp theo.
+    public static Action OnCustomerCompleted;
 }

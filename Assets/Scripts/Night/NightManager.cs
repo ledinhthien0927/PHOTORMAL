@@ -20,6 +20,9 @@ public class NightManager : MonoBehaviour
     {
         Debug.Log("Start Night: " + night);
         RuleManager.Instance.SetupRules(night);
+
+        if (CustomerQueueManager.Instance != null)
+            CustomerQueueManager.Instance.BuildQueueForNight(night);
     }
 
     public void CheckTarget()

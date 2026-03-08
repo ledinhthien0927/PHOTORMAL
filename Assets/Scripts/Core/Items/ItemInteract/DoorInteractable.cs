@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 [DisallowMultipleComponent]
 public sealed class DoorInteractable : MonoBehaviour, IInteractable
@@ -22,6 +23,8 @@ public sealed class DoorInteractable : MonoBehaviour, IInteractable
     private bool isOpen;
     private float currentAngle;
     private float targetAngle;
+
+    public event Action<bool> OnDoorStateChanged;
 
     public string Prompt
     {
@@ -64,6 +67,8 @@ public sealed class DoorInteractable : MonoBehaviour, IInteractable
 
         // Enable/disable the blocker so NavMeshAgents can pass through
         SetBlockerState(isOpen);
+
+        OnDoorStateChanged?.Invoke(isOpen);
     }
 
     private void Update()

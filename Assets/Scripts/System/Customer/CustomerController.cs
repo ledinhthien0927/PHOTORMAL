@@ -282,6 +282,9 @@ public class CustomerController : MonoBehaviour, IInteractable
             StudioManager.Instance.ClearCurrentPrintPhotoData();
         }
 
+        // Báo cho CustomerQueueManager biết phiên này đã xong
+        GameEventAPI.OnCustomerCompleted?.Invoke();
+
         Destroy(gameObject);
     }
 

@@ -3,7 +3,7 @@ using System.Collections;
 
 public class FootstepEvent : MonoBehaviour, IGameEvent
 {
-    [SerializeField] private float duration = 8f;
+    [SerializeField] private float duration = 15f;
 
     public void Execute()
     {
