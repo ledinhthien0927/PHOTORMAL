@@ -6,21 +6,37 @@ using UnityEngine.UI;
 public class OrderPopupUI : MonoBehaviour
 {
     [Header("UI Refs")]
-    public GameObject root;          // Panel root (SetActive on/off)
-    public TextMeshProUGUI orderText; // Text for showing order info
-    public Button pickupButton;       // Button that player clicks to pick up order
+    public GameObject root;
+    public TextMeshProUGUI orderText;
+    public Button pickupButton;
+
+    [Header("Follow Rotation")]
+    [SerializeField] private bool followParentRotation = true;
 
     private Action onPickup;
 
-    void Awake()
+    private void Awake()
     {
-        // Avoid stacking multiple listeners
+        // Avoid stacking multiple listeners.
         if (pickupButton != null)
             pickupButton.onClick.AddListener(HandlePickupClicked);
 
-        // Default hidden
+        // Default hidden.
         if (root != null)
             root.SetActive(false);
+    }
+
+    private void LateUpdate()
+    {
+        if (!followParentRotation)
+            return;
+
+        if (transform.parent == null)
+            return;
+
+        // Match the popup rotation with its parent anchor rotation
+        // so the popup always faces the same direction as the customer.
+        transform.rotation = transform.parent.rotation * Quaternion.Euler(0f, 180f, 0f);
     }
 
     public void Show(PhotoOrder order, Action onPickupClicked)
@@ -32,7 +48,6 @@ public class OrderPopupUI : MonoBehaviour
 
         if (orderText != null)
         {
-            // English UI text formatting
             orderText.text =
                 "ORDER\n" +
                 $"Quantity: {order.quantity}\n" +
@@ -50,7 +65,6 @@ public class OrderPopupUI : MonoBehaviour
 
     private void HandlePickupClicked()
     {
-        // Invoke callback and hide popup
         onPickup?.Invoke();
         Hide();
     }

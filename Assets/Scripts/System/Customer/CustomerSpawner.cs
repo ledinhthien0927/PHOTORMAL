@@ -10,6 +10,7 @@ public class CustomerSpawner : MonoBehaviour
     public Transform spawnPoint;
     public Transform standByPC;
     public Transform photoSpot;
+    public Transform exitPoint;
 
     [Header("Door Blocker (Collider)")]
     public Collider mainDoorBlocker;
@@ -29,10 +30,10 @@ public class CustomerSpawner : MonoBehaviour
     [Header("References")]
     public EnvironmentEffectController effectController;
 
-    void Start()
+    private void Start()
     {
-        // Spawn model đặc biệt (Twins / Clown) ở vị trí ẩn, sẵn sàng khi event kích hoạt.
-        // CustomerQueueManager sẽ điều phối việc spawn khách thông qua BuildQueueForNight().
+        // Spawn special models (Twins / Clown) at hidden points,
+        // ready for event activation.
         SpawnSpecialModels();
     }
 
@@ -65,31 +66,31 @@ public class CustomerSpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// Spawn 1 khách hàng bình thường. Được gọi bởi CustomerQueueManager.
+    /// Spawn one normal customer. Called by CustomerQueueManager.
     /// </summary>
     [ContextMenu("Spawn Normal Customer")]
     public void SpawnNormalCustomer()
     {
-        if (normalCustomerPrefabs.Count == 0 || !spawnPoint || !standByPC || !photoSpot)
+        if (normalCustomerPrefabs.Count == 0 || !spawnPoint || !standByPC || !photoSpot || !exitPoint)
         {
-            Debug.LogError("[CustomerSpawner] Missing prefab list/spawnPoint/standByPC/photoSpot.");
+            Debug.LogError("[CustomerSpawner] Missing prefab list/spawnPoint/standByPC/photoSpot/exitPoint.");
             return;
         }
 
-        // Chọn ngẫu nhiên 1 prefab từ danh sách
+        // Pick a random prefab from the normal customer list.
         CustomerController prefab = normalCustomerPrefabs[Random.Range(0, normalCustomerPrefabs.Count)];
 
-        CustomerController c = Instantiate(
+        CustomerController customer = Instantiate(
             prefab,
             spawnPoint.position,
             spawnPoint.rotation
         );
 
-        // Initialize movement flow (door check -> go PC -> go photo spot...)
-        c.Init(standByPC, mainDoorBlocker, photoSpot);
+        // Initialize movement flow.
+        customer.Init(standByPC, mainDoorBlocker, photoSpot, exitPoint);
 
-        // Inject order system + player reference (scene objects)
-        c.SetOrderService(orderService);
-        c.SetPlayer(player);
+        // Inject scene references.
+        customer.SetOrderService(orderService);
+        customer.SetPlayer(player);
     }
 }

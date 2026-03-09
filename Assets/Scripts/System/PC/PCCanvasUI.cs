@@ -23,10 +23,13 @@ public sealed class PCCanvasUI : MonoBehaviour
     [Header("Notification Images")]
     [SerializeField] private Image notReadyImage;
     [SerializeField] private Image wrongOrderImage;
+    [SerializeField] private Image threeWrongAttemptsImage;
     [SerializeField] private float notificationDuration = 1.5f;
+    [SerializeField] private int maxWrongAttempts = 3;
 
     private IInteractor currentInteractor;
     private Coroutine notificationRoutine;
+    private int wrongPrintAttempts;
 
     private void Start()
     {
@@ -166,8 +169,7 @@ public sealed class PCCanvasUI : MonoBehaviour
 
         if (!IsPrintSizeCorrect(order, printData) || !IsCopyCountCorrect(order, printData))
         {
-            ShowNotificationImage(wrongOrderImage);
-            Debug.LogWarning("Wrong print request for this customer.");
+            HandleWrongPrintAttempt(customer);
             return;
         }
 
@@ -182,6 +184,35 @@ public sealed class PCCanvasUI : MonoBehaviour
             StudioManager.Instance.PhotoData.RemovePhoto(printData.PhotoRecord);
 
         StudioManager.Instance.ClearCurrentPrintPhotoData();
+        wrongPrintAttempts = 0;
+
+        CloseUI();
+    }
+
+    private void HandleWrongPrintAttempt(CustomerController customer)
+    {
+        wrongPrintAttempts++;
+
+        Debug.LogWarning($"Wrong print request for this customer. Attempt {wrongPrintAttempts}/{maxWrongAttempts}");
+
+        if (wrongPrintAttempts >= maxWrongAttempts)
+        {
+            ShowNotificationImage(threeWrongAttemptsImage);
+            StartCoroutine(HandleCustomerLeaveAfterWrongAttempts(customer));
+            return;
+        }
+
+        ShowNotificationImage(wrongOrderImage);
+    }
+
+    private IEnumerator HandleCustomerLeaveAfterWrongAttempts(CustomerController customer)
+    {
+        yield return new WaitForSecondsRealtime(notificationDuration);
+
+        if (customer != null)
+            customer.LeaveBecauseOfPrintMistakes();
+
+        wrongPrintAttempts = 0;
         CloseUI();
     }
 
@@ -292,5 +323,8 @@ public sealed class PCCanvasUI : MonoBehaviour
 
         if (wrongOrderImage != null)
             wrongOrderImage.gameObject.SetActive(false);
+
+        if (threeWrongAttemptsImage != null)
+            threeWrongAttemptsImage.gameObject.SetActive(false);
     }
 }

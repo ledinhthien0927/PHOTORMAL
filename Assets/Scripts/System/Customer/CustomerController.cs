@@ -15,6 +15,8 @@ public class CustomerController : MonoBehaviour, IInteractable
         WaitingShootDone,
         ReturningToPC,
         WaitingPrintAtPC,
+        WaitingExitDoorOpen,
+        GoingToExit,
         Completed
     }
 
@@ -38,6 +40,7 @@ public class CustomerController : MonoBehaviour, IInteractable
 
     private Transform standByPC;
     private Transform photoSpot;
+    private Transform exitPoint;
     private Collider mainDoorBlocker;
 
     private CustomerState state;
@@ -50,6 +53,7 @@ public class CustomerController : MonoBehaviour, IInteractable
     private bool notifiedReady;
     private bool hasPhotoTaken;
     private bool listeningPhotoEvent;
+    private bool waitingForExitDoorRoutine;
 
     public string Prompt
     {
@@ -90,11 +94,17 @@ public class CustomerController : MonoBehaviour, IInteractable
         NotifyReady(false);
     }
 
-    public void Init(Transform standByPcPoint, Collider mainDoorBlockerCollider, Transform photoSpotPoint)
+    public void Init(
+        Transform standByPcPoint,
+        Collider mainDoorBlockerCollider,
+        Transform photoSpotPoint,
+        Transform exitPointTransform
+    )
     {
         standByPC = standByPcPoint;
         mainDoorBlocker = mainDoorBlockerCollider;
         photoSpot = photoSpotPoint;
+        exitPoint = exitPointTransform;
 
         state = CustomerState.WaitingDoorCheck;
         StartCoroutine(FlowRoutine());
@@ -152,10 +162,12 @@ public class CustomerController : MonoBehaviour, IInteractable
         {
             state = CustomerState.WaitingPrintAtPC;
 
-            // Printing is only allowed after the session has ended
-            // and the customer has returned to the PC side.
             if (StudioManager.Instance != null)
                 StudioManager.Instance.UnlockPrinting();
+        }
+        else if (state == CustomerState.GoingToExit && ReachedDestination())
+        {
+            FinishAndDestroy();
         }
 
         LookAtPlayer();
@@ -255,8 +267,6 @@ public class CustomerController : MonoBehaviour, IInteractable
             NotifyReady(false);
             StopListeningPhotoCaptured();
 
-            // Session ended, but printing is still locked
-            // until the customer reaches the PC side again.
             if (StudioManager.Instance != null)
                 StudioManager.Instance.LockPrinting();
 
@@ -271,8 +281,20 @@ public class CustomerController : MonoBehaviour, IInteractable
         if (state != CustomerState.WaitingPrintAtPC)
             return;
 
-        state = CustomerState.Completed;
+        BeginExitFlow();
+    }
 
+    public void LeaveBecauseOfPrintMistakes()
+    {
+        if (state != CustomerState.WaitingPrintAtPC)
+            return;
+
+        Debug.Log($"{name} left because of too many wrong print attempts.");
+        BeginExitFlow();
+    }
+
+    private void BeginExitFlow()
+    {
         StopListeningPhotoCaptured();
         NotifyReady(false);
 
@@ -282,9 +304,47 @@ public class CustomerController : MonoBehaviour, IInteractable
             StudioManager.Instance.ClearCurrentPrintPhotoData();
         }
 
-        // Báo cho CustomerQueueManager biết phiên này đã xong
-        GameEventAPI.OnCustomerCompleted?.Invoke();
+        if (popupInstance != null)
+            popupInstance.Hide();
 
+        if (exitPoint == null)
+        {
+            FinishAndDestroy();
+            return;
+        }
+
+        state = CustomerState.WaitingExitDoorOpen;
+        agent.isStopped = true;
+
+        if (!waitingForExitDoorRoutine)
+            StartCoroutine(WaitForExitDoorAndLeaveRoutine());
+    }
+
+    private IEnumerator WaitForExitDoorAndLeaveRoutine()
+    {
+        waitingForExitDoorRoutine = true;
+
+        while (state == CustomerState.WaitingExitDoorOpen && IsMainDoorClosed())
+            yield return new WaitForSeconds(recheckInterval);
+
+        waitingForExitDoorRoutine = false;
+
+        if (state != CustomerState.WaitingExitDoorOpen)
+            yield break;
+
+        state = CustomerState.GoingToExit;
+        agent.isStopped = false;
+        agent.SetDestination(exitPoint.position);
+    }
+
+    private void FinishAndDestroy()
+    {
+        if (state == CustomerState.Completed)
+            return;
+
+        state = CustomerState.Completed;
+
+        GameEventAPI.OnCustomerCompleted?.Invoke();
         Destroy(gameObject);
     }
 
@@ -325,9 +385,7 @@ public class CustomerController : MonoBehaviour, IInteractable
 
         bool shouldLook =
             state == CustomerState.WaitingPickupAtPC ||
-            state == CustomerState.WaitingShootDone ||
-            state == CustomerState.WaitingPrintAtPC ||
-            state == CustomerState.GoingToPhotoSpot;
+            state == CustomerState.WaitingShootDone;
 
         if (!shouldLook)
             return;
