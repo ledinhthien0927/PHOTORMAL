@@ -30,6 +30,8 @@ public class CustomerSpawner : MonoBehaviour
     [Header("References")]
     public EnvironmentEffectController effectController;
 
+    int currentIndex = 0;
+
     private void Start()
     {
         // Spawn special models (Twins / Clown) at hidden points,
@@ -65,9 +67,7 @@ public class CustomerSpawner : MonoBehaviour
         }
     }
 
-    /// <summary>
     /// Spawn one normal customer. Called by CustomerQueueManager.
-    /// </summary>
     [ContextMenu("Spawn Normal Customer")]
     public void SpawnNormalCustomer()
     {
@@ -78,7 +78,10 @@ public class CustomerSpawner : MonoBehaviour
         }
 
         // Pick a random prefab from the normal customer list.
-        CustomerController prefab = normalCustomerPrefabs[Random.Range(0, normalCustomerPrefabs.Count)];
+        //CustomerController prefab = normalCustomerPrefabs[Random.Range(0, normalCustomerPrefabs.Count)];
+
+        CustomerController prefab = normalCustomerPrefabs[currentIndex];
+        currentIndex = (currentIndex + 1) % normalCustomerPrefabs.Count;
 
         CustomerController customer = Instantiate(
             prefab,

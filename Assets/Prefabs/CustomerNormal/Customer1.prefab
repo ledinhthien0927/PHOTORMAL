@@ -194,7 +194,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   firstCheckDelay: 5
   recheckInterval: 0.5
-  popupAnchor: {fileID: 0}
+  popupAnchor: {fileID: 4479713558785680065}
   popupPrefab: {fileID: 117970966355187171, guid: efccd76dbcdc76346a54ecdca98aee43, type: 3}
   lookAtPlayerWhenWaiting: 1
   lookRotateSpeed: 360
