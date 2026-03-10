@@ -5,7 +5,7 @@ public class LightSwitch : MonoBehaviour, IInteractable
     [Header("Lights controlled by this switch")]
     [SerializeField] private Light[] targetLights;
 
-    private bool isOn = true;
+    private bool isOn = false;
 
     private void Start()
     {

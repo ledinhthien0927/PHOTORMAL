@@ -24,6 +24,8 @@ EditorBuildSettings:
     path: Assets/Scenes/Night_01.unity
     guid: ed185c104d319a14abca3610d8bfd604
   m_configObjects:
+    com.unity.adaptiveperformance.google.android.provider_settings: {fileID: 11400000, guid: 72d9a26a77de2624bb001283368592bd, type: 2}
+    com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: 9378d3b8dae1ce1429d3e6aa83744918, type: 2}
     com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000, guid: d6546a123affcd346954c26d4d328225, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
