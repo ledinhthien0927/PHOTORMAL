@@ -6,6 +6,9 @@
 [Ll]ogs/
 UserSettings/
 
+.utmp*
+*.umtp
+*.tmp
 *.csproj
 *.unityproj
 *.sln
