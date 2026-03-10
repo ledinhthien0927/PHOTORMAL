@@ -9,7 +9,7 @@ public class PlayerLookAround : MonoBehaviour
 
     private float xRotation = 0f;
 
-    void Update()
+    void LateUpdate()
     {
         Look();
     }

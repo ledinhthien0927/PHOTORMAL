@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class FixedTouchField : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
+public class FixedTouchField : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
     [HideInInspector]
     public Vector2 TouchDist;
@@ -12,31 +12,7 @@ public class FixedTouchField : MonoBehaviour, IPointerDownHandler, IPointerUpHan
     [HideInInspector]
     public bool Pressed;
 
-    void Start()
-    {
-
-    }
-
-    void Update()
-    {
-        if (Pressed)
-        {
-            if (PointerId >= 0 && PointerId < Input.touches.Length)
-            {
-                TouchDist = Input.touches[PointerId].position - PointerOld;
-                PointerOld = Input.touches[PointerId].position;
-            }
-            else
-            {
-                TouchDist = new Vector2(Input.mousePosition.x, Input.mousePosition.y) - PointerOld;
-                PointerOld = Input.mousePosition;
-            }
-        }
-        else
-        {
-            TouchDist = new Vector2();
-        }
-    }
+    private Vector2 _accumulatedDelta;
 
     public void OnPointerDown(PointerEventData eventData)
     {
@@ -45,10 +21,40 @@ public class FixedTouchField : MonoBehaviour, IPointerDownHandler, IPointerUpHan
         PointerOld = eventData.position;
     }
 
-
     public void OnPointerUp(PointerEventData eventData)
     {
         Pressed = false;
+        _accumulatedDelta = Vector2.zero;
+        TouchDist = Vector2.zero;
     }
 
+    public void OnDrag(PointerEventData eventData)
+    {
+        // Accumulate delta from Unity's Event System, which correctly handles multi-touch pointer IDs
+        _accumulatedDelta += eventData.delta;
+        PointerOld = eventData.position;
+    }
+
+    void Update()
+    {
+        if (Pressed)
+        {
+            // Sync the accumulated delta to TouchDist for other scripts to read
+            TouchDist = _accumulatedDelta;
+
+            // Reset accumulator for the next frame
+            _accumulatedDelta = Vector2.zero;
+            
+            // Fallback for Editor mouse if not dragging but pressed (unlikely to be needed but safe)
+            if (TouchDist == Vector2.zero && Application.isEditor)
+            {
+                // TouchDist = new Vector2(Input.mousePosition.x, Input.mousePosition.y) - PointerOld;
+                // PointerOld = Input.mousePosition;
+            }
+        }
+        else
+        {
+            TouchDist = Vector2.zero;
+        }
+    }
 }
