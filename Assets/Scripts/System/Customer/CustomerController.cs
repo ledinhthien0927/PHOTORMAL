@@ -35,6 +35,7 @@ public class CustomerController : MonoBehaviour, IInteractable
     [Header("Prompt Text")]
     [SerializeField] private string inviteText = "Invite to studio";
     [SerializeField] private string finishText = "Finish session";
+    [SerializeField] private string deliverText = "Give printed photo";
 
     private NavMeshAgent agent;
 
@@ -65,6 +66,9 @@ public class CustomerController : MonoBehaviour, IInteractable
             if (state == CustomerState.WaitingShootDone)
                 return finishText;
 
+            if (state == CustomerState.WaitingPrintAtPC)
+                return deliverText;
+
             return string.Empty;
         }
     }
@@ -72,13 +76,20 @@ public class CustomerController : MonoBehaviour, IInteractable
     public bool CanInteract(IInteractor interactor)
     {
         return state == CustomerState.WaitingPickupAtPC
-            || state == CustomerState.WaitingShootDone;
+            || state == CustomerState.WaitingShootDone
+            || state == CustomerState.WaitingPrintAtPC;
     }
 
     public void Interact(IInteractor interactor)
     {
         if (!CanInteract(interactor))
             return;
+
+        if (state == CustomerState.WaitingPrintAtPC)
+        {
+            TryReceivePrintedPhotoFrom(interactor);
+            return;
+        }
 
         Interact();
     }
@@ -276,6 +287,91 @@ public class CustomerController : MonoBehaviour, IInteractable
         }
     }
 
+    private void TryReceivePrintedPhotoFrom(IInteractor interactor)
+    {
+        if (interactor == null || interactor.Inventory == null || !interactor.Inventory.HasItem)
+        {
+            PlayerMessageUI.Instance?.ShowMessage("Please bring me the printed photo.");
+            return;
+        }
+
+        GameObject heldObject = interactor.Inventory.CurrentObject;
+        if (heldObject == null)
+        {
+            PlayerMessageUI.Instance?.ShowMessage("Please bring me the printed photo.");
+            return;
+        }
+
+        PrintedPhotoPickup printedPhoto = heldObject.GetComponent<PrintedPhotoPickup>();
+        if (printedPhoto == null || !printedPhoto.IsValid())
+        {
+            PlayerMessageUI.Instance?.ShowMessage("This is not the printed photo.");
+            return;
+        }
+
+        PrintPhotoData deliveredData = printedPhoto.Data;
+        bool isCorrect = IsDeliveredPhotoCorrect(deliveredData);
+
+        if (!isCorrect)
+        {
+            PlayerMessageUI.Instance?.ShowMessage(
+                "You printed the wrong order. Please throw it in the trash.",
+                3f
+            );
+            return;
+        }
+
+        int reward = 15 * currentOrder.quantity;
+        if (GameProgress.Instance != null)
+            GameProgress.Instance.AddMoney(reward);
+
+        if (StudioManager.Instance != null && StudioManager.Instance.PhotoData != null)
+        {
+            PhotoRecord record = GetExpectedPhotoRecord();
+            if (record != null)
+                StudioManager.Instance.PhotoData.RemovePhoto(record);
+        }
+
+        if (StudioManager.Instance != null)
+            StudioManager.Instance.ClearCurrentPrintPhotoData();
+
+        printedPhoto.Consume();
+
+        PlayerMessageUI.Instance?.ShowMessage(
+            "Thank you! This is exactly what I wanted.",
+            3f
+        );
+
+        BeginExitFlow();
+    }
+
+    private bool IsDeliveredPhotoCorrect(PrintPhotoData deliveredData)
+    {
+        if (deliveredData == null)
+            return false;
+
+        if (!deliveredData.MatchesOrder(currentOrder))
+            return false;
+
+        PhotoRecord expectedRecord = GetExpectedPhotoRecord();
+        if (expectedRecord == null)
+            return false;
+
+        return deliveredData.MatchesPhotoRecord(expectedRecord);
+    }
+
+    private PhotoRecord GetExpectedPhotoRecord()
+    {
+        if (StudioManager.Instance == null)
+            return null;
+
+        PrintPhotoData expectedData = StudioManager.Instance.CurrentPrintPhotoData;
+        if (expectedData == null)
+            return null;
+
+        return expectedData.PhotoRecord;
+    }
+
     public void OnPhotosDelivered()
     {
         if (state != CustomerState.WaitingPrintAtPC)
@@ -301,7 +397,6 @@ public class CustomerController : MonoBehaviour, IInteractable
         if (StudioManager.Instance != null)
         {
             StudioManager.Instance.ClearCurrentCustomer();
-            StudioManager.Instance.ClearCurrentPrintPhotoData();
         }
 
         if (popupInstance != null)
@@ -385,7 +480,8 @@ public class CustomerController : MonoBehaviour, IInteractable
 
         bool shouldLook =
             state == CustomerState.WaitingPickupAtPC ||
-            state == CustomerState.WaitingShootDone;
+            state == CustomerState.WaitingShootDone ||
+            state == CustomerState.WaitingPrintAtPC;
 
         if (!shouldLook)
             return;
@@ -410,18 +506,6 @@ public class CustomerController : MonoBehaviour, IInteractable
         if (printData == null)
             return;
 
-        string photoId = "NULL";
-
-        if (printData.PhotoRecord != null)
-            photoId = printData.PhotoRecord.id;
-
-        Debug.Log(
-            $"{name} received printed photo | " +
-            $"PhotoId: {photoId} | " +
-            $"Size: {printData.PrintSize} | " +
-            $"Copies: {printData.CopyCount}"
-        );
-
-        OnPhotosDelivered();
+        Debug.Log($"{name} received printed photo directly.");
     }
 }

@@ -11,14 +11,6 @@ public sealed class StudioManager : MonoBehaviour
         PhotoMode
     }
 
-    public enum PhotoCaptureBlockReason
-    {
-        None,
-        LowBattery,
-        LowMemory,
-        LowBatteryAndLowMemory
-    }
-
     [Header("Modules")]
     [SerializeField] private CameraController cameraController;
     [SerializeField] private PhotoData photoData;
@@ -42,7 +34,6 @@ public sealed class StudioManager : MonoBehaviour
 
     public static event Action OnPhotoCaptured;
     public static event Action<bool> OnPrintAvailabilityChanged;
-    public static event Action<PhotoCaptureBlockReason> OnPhotoCaptureBlocked;
 
     private void Awake()
     {
@@ -120,13 +111,11 @@ public sealed class StudioManager : MonoBehaviour
 
     public bool TryTakePhoto(IInteractor interactor)
     {
-        if (!CanTakePhoto(interactor, out PhotoCaptureBlockReason blockReason))
-        {
-            if (blockReason != PhotoCaptureBlockReason.None)
-                OnPhotoCaptureBlocked?.Invoke(blockReason);
-
+        if (!CanTakePhoto(interactor))
             return false;
-        }
+
+        if (cameraController == null || photoData == null)
+            return false;
 
         lastShotTime = Time.time;
 
@@ -134,13 +123,6 @@ public sealed class StudioManager : MonoBehaviour
         {
             if (texture == null)
                 return;
-
-            // Consume resources only after a valid photo texture is produced.
-            if (photoData != null && !photoData.TryConsumeShotResources())
-            {
-                OnPhotoCaptureBlocked?.Invoke(GetPhotoCaptureBlockReason());
-                return;
-            }
 
             PhotoRecord record = photoData.AddPhoto(texture);
             CurrentPrintPhotoData = new PrintPhotoData(record);
@@ -157,10 +139,8 @@ public sealed class StudioManager : MonoBehaviour
         return true;
     }
 
-    private bool CanTakePhoto(IInteractor interactor, out PhotoCaptureBlockReason blockReason)
+    private bool CanTakePhoto(IInteractor interactor)
     {
-        blockReason = PhotoCaptureBlockReason.None;
-
         if (interactor == null)
             return false;
 
@@ -186,32 +166,6 @@ public sealed class StudioManager : MonoBehaviour
         if (photoData == null)
             return false;
 
-        if (!photoData.HasEnoughResourcesForShot())
-        {
-            blockReason = GetPhotoCaptureBlockReason();
-            return false;
-        }
-
         return true;
-    }
-
-    private PhotoCaptureBlockReason GetPhotoCaptureBlockReason()
-    {
-        if (photoData == null)
-            return PhotoCaptureBlockReason.None;
-
-        bool lowBattery = !photoData.HasEnoughBatteryForShot();
-        bool lowMemory = !photoData.HasEnoughMemoryForShot();
-
-        if (lowBattery && lowMemory)
-            return PhotoCaptureBlockReason.LowBatteryAndLowMemory;
-
-        if (lowBattery)
-            return PhotoCaptureBlockReason.LowBattery;
-
-        if (lowMemory)
-            return PhotoCaptureBlockReason.LowMemory;
-
-        return PhotoCaptureBlockReason.None;
     }
 }

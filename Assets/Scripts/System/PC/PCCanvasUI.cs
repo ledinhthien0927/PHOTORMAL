@@ -1,4 +1,3 @@
-using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -20,16 +19,21 @@ public sealed class PCCanvasUI : MonoBehaviour
     [SerializeField] private Button printButton;
     [SerializeField] private Button closeButton;
 
-    [Header("Notification Images")]
-    [SerializeField] private Image notReadyImage;
-    [SerializeField] private Image wrongOrderImage;
-    [SerializeField] private Image threeWrongAttemptsImage;
-    [SerializeField] private float notificationDuration = 1.5f;
-    [SerializeField] private int maxWrongAttempts = 3;
+    [Header("Printed Photo Spawn")]
+    [SerializeField] private PrintedPhotoPickup printedPhotoPrefab;
+    [SerializeField] private Transform printedPhotoSpawnPoint;
+
+    [Header("Printer Supplies UI")]
+    [SerializeField] private TMP_Text paperValueText;
+    [SerializeField] private TMP_Text inkValueText;
+    [SerializeField] private TMP_Text printerStatusText;
+
+    [Header("Supply Store")]
+    [SerializeField] private Button buyPaperButton;
+    [SerializeField] private Button buyInkButton;
+    [SerializeField] private PrinterSupplyStore printerSupplyStore;
 
     private IInteractor currentInteractor;
-    private Coroutine notificationRoutine;
-    private int wrongPrintAttempts;
 
     private void Start()
     {
@@ -45,10 +49,32 @@ public sealed class PCCanvasUI : MonoBehaviour
         if (copyInput != null)
             copyInput.onValueChanged.AddListener(OnCopyChanged);
 
+        if (buyPaperButton != null)
+            buyPaperButton.onClick.AddListener(OnBuyPaperClicked);
+
+        if (buyInkButton != null)
+            buyInkButton.onClick.AddListener(OnBuyInkClicked);
+
         if (rootPanel != null)
             rootPanel.SetActive(false);
+    }
 
-        HideAllNotificationImages();
+    private void OnEnable()
+    {
+        if (PrinterSupplyData.Instance != null)
+        {
+            PrinterSupplyData.Instance.OnPaperChanged += OnPaperChanged;
+            PrinterSupplyData.Instance.OnInkChanged += OnInkChanged;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (PrinterSupplyData.Instance != null)
+        {
+            PrinterSupplyData.Instance.OnPaperChanged -= OnPaperChanged;
+            PrinterSupplyData.Instance.OnInkChanged -= OnInkChanged;
+        }
     }
 
     public void OpenUI(IInteractor interactor)
@@ -66,8 +92,8 @@ public sealed class PCCanvasUI : MonoBehaviour
 
         rootPanel.SetActive(true);
         RefreshUI();
+        RefreshSupplyUI();
         SetPlayerInteractorEnabled(false);
-        HideAllNotificationImages();
     }
 
     public void CloseUI()
@@ -82,7 +108,6 @@ public sealed class PCCanvasUI : MonoBehaviour
 
         SetPlayerInteractorEnabled(true);
         currentInteractor = null;
-        HideAllNotificationImages();
     }
 
     private void RefreshUI()
@@ -114,6 +139,46 @@ public sealed class PCCanvasUI : MonoBehaviour
 
         if (copyInput != null)
             copyInput.SetTextWithoutNotify(printData.CopyCount.ToString());
+    }
+
+    private void RefreshSupplyUI()
+    {
+        PrinterSupplyData supplyData = PrinterSupplyData.Instance;
+
+        if (supplyData == null)
+        {
+            if (paperValueText != null)
+                paperValueText.text = "PAPER: -";
+
+            if (inkValueText != null)
+                inkValueText.text = "INK: -";
+
+            if (printerStatusText != null)
+                printerStatusText.text = string.Empty;
+
+            return;
+        }
+
+        if (paperValueText != null)
+            paperValueText.text = $"PAPER: {supplyData.CurrentPaper:0.0}";
+
+        if (inkValueText != null)
+            inkValueText.text = $"INK: {supplyData.CurrentInk:0.0}";
+
+        if (printerStatusText != null)
+        {
+            printerStatusText.text = supplyData.GetBlockingMessage();
+        }
+    }
+
+    private void OnPaperChanged(float value)
+    {
+        RefreshSupplyUI();
+    }
+
+    private void OnInkChanged(float value)
+    {
+        RefreshSupplyUI();
     }
 
     private void OnSizeChanged(int index)
@@ -160,94 +225,67 @@ public sealed class PCCanvasUI : MonoBehaviour
 
         if (!StudioManager.Instance.CanPrintCurrentPhoto)
         {
-            ShowNotificationImage(notReadyImage);
-            Debug.LogWarning("Printing is locked because the session has not ended yet.");
+            if (printerStatusText != null)
+                printerStatusText.text = "Printing is not ready yet.";
             return;
         }
 
-        PhotoOrder order = customer.GetCurrentOrder();
-
-        if (!IsPrintSizeCorrect(order, printData) || !IsCopyCountCorrect(order, printData))
+        PrinterSupplyData supplyData = PrinterSupplyData.Instance;
+        if (supplyData == null)
         {
-            HandleWrongPrintAttempt(customer);
+            Debug.LogWarning("PrinterSupplyData is missing in the scene.");
             return;
         }
 
-        int reward = 15 * order.quantity;
+        if (!supplyData.CanPrint())
+        {
+            RefreshSupplyUI();
+            return;
+        }
 
-        if (GameProgress.Instance != null)
-            GameProgress.Instance.AddMoney(reward);
+        if (printedPhotoPrefab == null || printedPhotoSpawnPoint == null)
+        {
+            Debug.LogWarning("Printed photo prefab or spawn point is missing.");
+            return;
+        }
 
-        customer.ReceivePrintedPhoto(printData);
+        PrintedPhotoPickup printedItem = Instantiate(
+            printedPhotoPrefab,
+            printedPhotoSpawnPoint.position,
+            printedPhotoSpawnPoint.rotation
+        );
 
-        if (StudioManager.Instance.PhotoData != null && printData.PhotoRecord != null)
-            StudioManager.Instance.PhotoData.RemovePhoto(printData.PhotoRecord);
+        printedItem.Setup(printData.Clone());
 
-        StudioManager.Instance.ClearCurrentPrintPhotoData();
-        wrongPrintAttempts = 0;
+        if (!supplyData.TryConsumeForPrint())
+        {
+            Destroy(printedItem.gameObject);
+            RefreshSupplyUI();
+            return;
+        }
+
+        RefreshSupplyUI();
 
         CloseUI();
+        PlayerMessageUI.Instance?.ShowMessage("Printed photo is ready.");
     }
 
-    private void HandleWrongPrintAttempt(CustomerController customer)
+    private void OnBuyPaperClicked()
     {
-        wrongPrintAttempts++;
-
-        Debug.LogWarning($"Wrong print request for this customer. Attempt {wrongPrintAttempts}/{maxWrongAttempts}");
-
-        if (wrongPrintAttempts >= maxWrongAttempts)
-        {
-            ShowNotificationImage(threeWrongAttemptsImage);
-            StartCoroutine(HandleCustomerLeaveAfterWrongAttempts(customer));
+        if (printerSupplyStore == null)
             return;
-        }
 
-        ShowNotificationImage(wrongOrderImage);
+        printerSupplyStore.BuyPaperBox();
+        RefreshSupplyUI();
     }
 
-    private IEnumerator HandleCustomerLeaveAfterWrongAttempts(CustomerController customer)
+    private void OnBuyInkClicked()
     {
-        yield return new WaitForSecondsRealtime(notificationDuration);
+        if (printerSupplyStore == null)
+            return;
 
-        if (customer != null)
-            customer.LeaveBecauseOfPrintMistakes();
-
-        wrongPrintAttempts = 0;
-        CloseUI();
-    }
-
-    private bool IsPrintSizeCorrect(PhotoOrder order, PrintPhotoData printData)
-    {
-        if (printData == null)
-            return false;
-
-        string requiredSize = ConvertPhotoSizeToLabel(order.size);
-        return printData.PrintSize == requiredSize;
-    }
-
-    private bool IsCopyCountCorrect(PhotoOrder order, PrintPhotoData printData)
-    {
-        if (printData == null)
-            return false;
-
-        return printData.CopyCount == order.quantity;
-    }
-
-    private string ConvertPhotoSizeToLabel(PhotoSize size)
-    {
-        switch (size)
-        {
-            case PhotoSize.Size3x4:
-                return "3x4";
-            case PhotoSize.Size4x6:
-                return "4x6";
-            case PhotoSize.Size5x7:
-                return "5x7";
-            case PhotoSize.Size6x8:
-                return "6x8";
-            default:
-                return "4x6";
-        }
+        printerSupplyStore.BuyInkBox();
+        RefreshSupplyUI();
     }
 
     private void SetPlayerInteractorEnabled(bool enabled)
@@ -294,37 +332,5 @@ public sealed class PCCanvasUI : MonoBehaviour
             default:
                 return "4x6";
         }
-    }
-
-    private void ShowNotificationImage(Image targetImage)
-    {
-        if (targetImage == null)
-            return;
-
-        if (notificationRoutine != null)
-            StopCoroutine(notificationRoutine);
-
-        HideAllNotificationImages();
-        notificationRoutine = StartCoroutine(ShowNotificationRoutine(targetImage));
-    }
-
-    private IEnumerator ShowNotificationRoutine(Image targetImage)
-    {
-        targetImage.gameObject.SetActive(true);
-        yield return new WaitForSecondsRealtime(notificationDuration);
-        targetImage.gameObject.SetActive(false);
-        notificationRoutine = null;
-    }
-
-    private void HideAllNotificationImages()
-    {
-        if (notReadyImage != null)
-            notReadyImage.gameObject.SetActive(false);
-
-        if (wrongOrderImage != null)
-            wrongOrderImage.gameObject.SetActive(false);
-
-        if (threeWrongAttemptsImage != null)
-            threeWrongAttemptsImage.gameObject.SetActive(false);
     }
 }
