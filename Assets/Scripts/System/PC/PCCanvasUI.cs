@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -252,25 +253,38 @@ public sealed class PCCanvasUI : MonoBehaviour
             return;
         }
 
+        if (!supplyData.TryConsumeForPrint())
+        {
+            RefreshSupplyUI();
+            return;
+        }
+
+        if (printButton != null)
+            printButton.interactable = false;
+
+        StartCoroutine(PrintRoutine(printData.Clone()));
+    }
+
+    private IEnumerator PrintRoutine(PrintPhotoData printDataClone)
+    {
+        if (printSound != null)
+        {
+            AudioManager.Instance?.PlaySFX(printSound);
+            yield return new WaitForSeconds(printSound.length);
+        }
+
         PrintedPhotoPickup printedItem = Instantiate(
             printedPhotoPrefab,
             printedPhotoSpawnPoint.position,
             printedPhotoSpawnPoint.rotation
         );
 
-        printedItem.Setup(printData.Clone());
-
-        if (!supplyData.TryConsumeForPrint())
-        {
-            Destroy(printedItem.gameObject);
-            RefreshSupplyUI();
-            return;
-        }
-
-        // PRINT SOUND
-        AudioManager.Instance?.PlaySFX(printSound);
+        printedItem.Setup(printDataClone);
 
         RefreshSupplyUI();
+
+        if (printButton != null)
+            printButton.interactable = true;
 
         CloseUI();
         PlayerMessageUI.Instance?.ShowMessage("Printed photo is ready.");
