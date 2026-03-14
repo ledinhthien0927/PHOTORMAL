@@ -453,6 +453,8 @@ MonoBehaviour:
   closeText: Close door
   locked: 0
   lockedText: Locked
+  openSound: {fileID: 8300000, guid: 1adc30dc06f8aec47b5f1c2bd19eeb4d, type: 3}
+  closeSound: {fileID: 8300000, guid: 47bcdf7d118e90d4c921375166facf8d, type: 3}
 --- !u!208 &70900481
 NavMeshObstacle:
   m_ObjectHideFlags: 0
@@ -1131,6 +1133,7 @@ MonoBehaviour:
   width: 512
   height: 512
   uiRoot: {fileID: 71278597}
+  cameraShotSound: {fileID: 8300000, guid: 46a66c927660579488104c1f79fd23d9, type: 3}
 --- !u!114 &128890716
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1627,6 +1630,7 @@ MonoBehaviour:
   copyInput: {fileID: 1174085526}
   printButton: {fileID: 1996135098}
   closeButton: {fileID: 1596543065}
+  printSound: {fileID: 8300000, guid: 77ebe4709f2947c4db35970d510433af, type: 3}
   printedPhotoPrefab: {fileID: 9159441686680063546, guid: 50c0f36c0e153034da7796f3438e1bf3, type: 3}
   printedPhotoSpawnPoint: {fileID: 1007369045}
   paperValueText: {fileID: 280616965}
@@ -6183,6 +6187,8 @@ MonoBehaviour:
   closeText: Close door
   locked: 0
   lockedText: Locked
+  openSound: {fileID: 8300000, guid: 1adc30dc06f8aec47b5f1c2bd19eeb4d, type: 3}
+  closeSound: {fileID: 8300000, guid: 47bcdf7d118e90d4c921375166facf8d, type: 3}
 --- !u!208 &857467402
 NavMeshObstacle:
   m_ObjectHideFlags: 0
@@ -7961,7 +7967,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1406271589
 Transform:
   m_ObjectHideFlags: 0
@@ -10614,6 +10620,8 @@ MonoBehaviour:
   closeText: Close door
   locked: 0
   lockedText: Locked
+  openSound: {fileID: 8300000, guid: 1adc30dc06f8aec47b5f1c2bd19eeb4d, type: 3}
+  closeSound: {fileID: 8300000, guid: 47bcdf7d118e90d4c921375166facf8d, type: 3}
 --- !u!64 &1853916588
 MeshCollider:
   m_ObjectHideFlags: 0

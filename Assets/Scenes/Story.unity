@@ -568,6 +568,7 @@ GameObject:
   - component: {fileID: 913015923}
   - component: {fileID: 913015922}
   - component: {fileID: 913015927}
+  - component: {fileID: 913015928}
   m_Layer: 5
   m_Name: Next_Button
   m_TagString: Untagged
@@ -756,6 +757,18 @@ MonoBehaviour:
   fadeOverlay: {fileID: 1698946949}
   fadeOutDuration: 0.6
   disableButtonWhileLoading: 1
+--- !u!114 &913015928
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 913015920}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0be19280f35aec44087121ead65a4771, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &961739749
 GameObject:
   m_ObjectHideFlags: 0

@@ -19,6 +19,9 @@ public sealed class PCCanvasUI : MonoBehaviour
     [SerializeField] private Button printButton;
     [SerializeField] private Button closeButton;
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip printSound;
+
     [Header("Printed Photo Spawn")]
     [SerializeField] private PrintedPhotoPickup printedPhotoPrefab;
     [SerializeField] private Transform printedPhotoSpawnPoint;
@@ -264,6 +267,9 @@ public sealed class PCCanvasUI : MonoBehaviour
             return;
         }
 
+        // PRINT SOUND
+        AudioManager.Instance?.PlaySFX(printSound);
+
         RefreshSupplyUI();
 
         CloseUI();
@@ -304,16 +310,11 @@ public sealed class PCCanvasUI : MonoBehaviour
     {
         switch (size)
         {
-            case "3x4":
-                return 0;
-            case "4x6":
-                return 1;
-            case "5x7":
-                return 2;
-            case "6x8":
-                return 3;
-            default:
-                return 1;
+            case "3x4": return 0;
+            case "4x6": return 1;
+            case "5x7": return 2;
+            case "6x8": return 3;
+            default: return 1;
         }
     }
 
@@ -321,16 +322,11 @@ public sealed class PCCanvasUI : MonoBehaviour
     {
         switch (index)
         {
-            case 0:
-                return "3x4";
-            case 1:
-                return "4x6";
-            case 2:
-                return "5x7";
-            case 3:
-                return "6x8";
-            default:
-                return "4x6";
+            case 0: return "3x4";
+            case 1: return "4x6";
+            case 2: return "5x7";
+            case 3: return "6x8";
+            default: return "4x6";
         }
     }
 }
