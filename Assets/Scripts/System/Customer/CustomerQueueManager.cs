@@ -41,11 +41,19 @@ public class CustomerQueueManager : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] private float clownChancePerSlot = 0.15f;
 
+    [Tooltip("Xác suất mỗi 'slot' trong queue được thay bằng sự kiện Footstep (0-1)")]
+    [Range(0f, 1f)]
+    [SerializeField] private float footstepChancePerSlot = 0.15f;
+
+    [Tooltip("Xác suất mỗi 'slot' trong queue được thay bằng sự kiện Flicker (0-1)")]
+    [Range(0f, 1f)]
+    [SerializeField] private float flickerChancePerSlot = 0.15f;
+
     // ==========================================
     // INTERNAL STATE
     // ==========================================
 
-    public enum SpawnEntryType { Normal, TwinsEvent, ClownEvent }
+    public enum SpawnEntryType { Normal, TwinsEvent, ClownEvent, FootstepEvent, FlickerEvent }
 
     [System.Serializable]
     public class SpawnEntry
@@ -76,11 +84,24 @@ public class CustomerQueueManager : MonoBehaviour
     private void OnEnable()
     {
         GameEventAPI.OnCustomerCompleted += OnCustomerCompleted;
+        
+        // Theo dõi sự kiện kết thúc để giải phóng hàng đợi
+        GameEventAPI.OnTwinsPresenceChanged += HandleTwinsEnd;
+        GameEventAPI.OnClownDisappeared += OnEventEntityCompleted;
+        GameEventAPI.OnClownJumpscare += OnEventEntityCompleted;
+        GameEventAPI.OnStudioLightFlicker += HandleFlickerEnd;
+        GameEventAPI.OnFootstepToggled += HandleFootstepEnd;
     }
 
     private void OnDisable()
     {
         GameEventAPI.OnCustomerCompleted -= OnCustomerCompleted;
+
+        GameEventAPI.OnTwinsPresenceChanged -= HandleTwinsEnd;
+        GameEventAPI.OnClownDisappeared -= OnEventEntityCompleted;
+        GameEventAPI.OnClownJumpscare -= OnEventEntityCompleted;
+        GameEventAPI.OnStudioLightFlicker -= HandleFlickerEnd;
+        GameEventAPI.OnFootstepToggled -= HandleFootstepEnd;
     }
 
     // ==========================================
@@ -205,6 +226,22 @@ public class CustomerQueueManager : MonoBehaviour
             }
         }
 
+        // --- FOOTSTEP & FLICKER ---
+        for (int i = startIndex; i < entries.Count; i++)
+        {
+            if (entries[i].Type != SpawnEntryType.Normal) continue;
+
+            float roll = Random.value;
+            if (roll < footstepChancePerSlot)
+            {
+                entries[i] = new SpawnEntry(SpawnEntryType.FootstepEvent);
+            }
+            else if (roll < footstepChancePerSlot + flickerChancePerSlot)
+            {
+                entries[i] = new SpawnEntry(SpawnEntryType.FlickerEvent);
+            }
+        }
+
         return entries;
     }
 
@@ -247,24 +284,31 @@ public class CustomerQueueManager : MonoBehaviour
                 break;
 
             case SpawnEntryType.TwinsEvent:
-                Debug.Log("[CustomerQueueManager] Spawn: Twins Event (kèm Normal Customer)");
-                // Kích hoạt sự kiện Twins qua EventManager
+                Debug.Log("[CustomerQueueManager] Spawn: Twins Event (Tuần tự)");
+                currentCustomersAlive++; // Chặn queue cho đến khi Twins biến mất
                 if (EventManager.Instance != null)
                     EventManager.Instance.TriggerEvent("Twins");
-                // Vẫn spawn khách bình thường kèm theo
-                if (customerSpawner != null)
-                {
-                    customerSpawner.SpawnNormalCustomer();
-                    currentCustomersAlive++;
-                }
                 break;
 
             case SpawnEntryType.ClownEvent:
-                Debug.Log("[CustomerQueueManager] Spawn: Clown Event (không kèm Normal)");
-                // Kích hoạt sự kiện Clown qua EventManager (chỉ ở Đêm 3+)
+                Debug.Log("[CustomerQueueManager] Spawn: Clown Event (Tuần tự)");
+                currentCustomersAlive++; // Chặn queue cho đến khi Clown biến mất/Jumpscare
                 if (EventManager.Instance != null)
                     EventManager.Instance.TriggerEvent("Clown");
-                // Sự kiện Clown không spawn khách bình thường; player phải mở cửa
+                break;
+
+            case SpawnEntryType.FootstepEvent:
+                Debug.Log("[CustomerQueueManager] Spawn: Footstep Event (Tuần tự)");
+                currentCustomersAlive++; // Chặn queue cho đến khi hết tiếng chân
+                if (EventManager.Instance != null)
+                    EventManager.Instance.TriggerEvent("Footstep");
+                break;
+
+            case SpawnEntryType.FlickerEvent:
+                Debug.Log("[CustomerQueueManager] Spawn: Flicker Event (Tuần tự)");
+                currentCustomersAlive++; // Chặn queue cho đến khi hết nháy đèn
+                if (EventManager.Instance != null)
+                    EventManager.Instance.TriggerEvent("FlickerLight");
                 break;
         }
     }
@@ -272,6 +316,26 @@ public class CustomerQueueManager : MonoBehaviour
     private void OnCustomerCompleted()
     {
         currentCustomersAlive = Mathf.Max(0, currentCustomersAlive - 1);
-        Debug.Log($"[CustomerQueueManager] Khách hoàn thành. Còn {currentCustomersAlive} khách.");
+        Debug.Log($"[CustomerQueueManager] Thực thể (Khách/Event) hoàn thành. Còn {currentCustomersAlive} đang xử lý.");
+    }
+
+    private void OnEventEntityCompleted()
+    {
+        OnCustomerCompleted();
+    }
+
+    private void HandleTwinsEnd(bool isPresent)
+    {
+        if (!isPresent) OnEventEntityCompleted();
+    }
+
+    private void HandleFlickerEnd(bool isFlickering)
+    {
+        if (!isFlickering) OnEventEntityCompleted();
+    }
+
+    private void HandleFootstepEnd(bool isPlaying)
+    {
+        if (!isPlaying) OnEventEntityCompleted();
     }
 }
