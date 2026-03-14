@@ -11,6 +11,9 @@ public class PopupManager : MonoBehaviour, IGameEvent
     [SerializeField] private GameObject winNightPopup;
     [SerializeField] private GameObject pausePopup;
 
+    [Header("Settings")]
+    [SerializeField] private float popupFadeDuration = 0.5f;
+
     [Header("Scene Configuration")]
     [SerializeField] private string mainMenuSceneName = "MainMenu";
     
@@ -78,15 +81,37 @@ public class PopupManager : MonoBehaviour, IGameEvent
     {
         if (popup != null)
         {
-            // Stop game logic and show UI
+            // Stop game logic
             Time.timeScale = 0f;
             if (gameplayCanvas != null) gameplayCanvas.SetActive(false);
-            popup.SetActive(true);
+            
+            // Start fade animation
+            StartCoroutine(FadeInCoroutine(popup));
         }
         else
         {
             Debug.LogError("[PopupManager] Target popup is NULL! Check Inspector assignments.");
         }
+    }
+
+    private System.Collections.IEnumerator FadeInCoroutine(GameObject popup)
+    {
+        CanvasGroup cg = popup.GetComponent<CanvasGroup>();
+        if (cg == null) cg = popup.AddComponent<CanvasGroup>();
+
+        // Initialize state
+        cg.alpha = 0f;
+        popup.SetActive(true);
+
+        float elapsed = 0f;
+        while (elapsed < popupFadeDuration)
+        {
+            // Use unscaledDeltaTime because Time.timeScale is 0
+            elapsed += Time.unscaledDeltaTime;
+            cg.alpha = Mathf.Clamp01(elapsed / popupFadeDuration);
+            yield return null;
+        }
+        cg.alpha = 1f;
     }
 
     // --- Button Handlers ---
