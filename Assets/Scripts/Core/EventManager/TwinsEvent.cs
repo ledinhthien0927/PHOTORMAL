@@ -24,28 +24,16 @@ public class TwinsEvent : MonoBehaviour, IGameEvent
 
         float elapsed = 0f;
 
-        while (RuleContext.Instance.HasTwinsAppeared && elapsed < durationBeforeError)
+        while (RuleContext.Instance.HasTwinsAppeared)
         {
             // Trạng thái đèn được cập nhật liên tục qua Event API vào RuleContext
             // RuleManager sẽ bắt sự kiện tắt đèn để set HasTwinsAppeared = false
-            
-            elapsed += Time.deltaTime;
+            // Hoặc RuleManager sẽ bắt timeout và set HasTwinsAppeared = false
             yield return null;
         }
 
-        // Nếu hết thời gian mà cặp song sinh vẫn còn (người chơi không tắt đèn)
-        if (RuleContext.Instance.HasTwinsAppeared)
-        {
-            Debug.Log("Lỗi: Không tắt đèn khi cặp song sinh xuất hiện!");
-            RuleContext.Instance.HasTwinsAppeared = false;
-            
-            // Xóa cặp song sinh thông qua API Coder B
-            GameEventAPI.OnTwinsPresenceChanged?.Invoke(false);
-
-            // Phạt lỗi
-            GameProgress.Instance.AddError();
-            EventManager.Instance.TriggerEvent("RuleBrokenEffect");
-        }
+        // Đảm bảo ẩn model khi kết thúc event (dù là do tắt đèn hay vi phạm)
+        GameEventAPI.OnTwinsPresenceChanged?.Invoke(false);
     }
 
     private void Start()

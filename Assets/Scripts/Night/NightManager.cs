@@ -4,7 +4,7 @@ public class NightManager : MonoBehaviour
 {
     public static NightManager Instance;
 
-    private int[] targets = { 600, 900, 1200 };
+    [SerializeField] private int[] targets = { 600, 900, 1200 };
 
     private void Awake()
     {
@@ -34,13 +34,16 @@ public class NightManager : MonoBehaviour
 
         if (GameProgress.Instance.CurrentMoney >= target)
         {
-            EndNight();
+            if (PopupManager.Instance != null)
+                PopupManager.Instance.ShowWinNight();
+            else
+                AdvanceToNextNight();
         }
     }
 
-    void EndNight()
+    public void AdvanceToNextNight()
     {
-        Debug.Log("Night Complete");
+        Debug.Log("Advancing to Next Night");
         GameProgress.Instance.NextNight();
         StartNight(GameProgress.Instance.CurrentNight);
     }

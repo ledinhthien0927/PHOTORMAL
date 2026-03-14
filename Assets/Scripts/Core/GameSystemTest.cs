@@ -17,6 +17,7 @@ using UnityEngine;
 /// F8  = Item Interaction Tests (Door, LightSwitch, BackDoor)
 /// F9  = Full Game Loop Test (Night transitions)
 /// F10 = Status Panel (dump all current state)
+/// F11 = Win Night (Add money to reach target)
 /// </summary>
 public class GameSystemTest : MonoBehaviour
 {
@@ -37,6 +38,7 @@ public class GameSystemTest : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F8)) RunTest(TestItemInteractions());
         if (Input.GetKeyDown(KeyCode.F9)) RunTest(TestFullGameLoop());
         if (Input.GetKeyDown(KeyCode.F10)) DumpStatus();
+        if (Input.GetKeyDown(KeyCode.F11)) RunTest(TestWinNight());
     }
 
     private void RunTest(IEnumerator testRoutine)
@@ -696,6 +698,43 @@ public class GameSystemTest : MonoBehaviour
             LogFail("4th error: Error count didn't increase");
 
         Log("Full Game Loop Test Complete.");
+    }
+
+    // ============================================================
+    // F11: WIN NIGHT TEST
+    // ============================================================
+
+    private IEnumerator TestWinNight()
+    {
+        LogHeader("WIN NIGHT TEST");
+
+        if (!CheckDependencies()) yield break;
+
+        int currentNight = GameProgress.Instance.CurrentNight;
+        int currentMoney = GameProgress.Instance.CurrentMoney;
+        
+        Log($"Current Night: {currentNight}, Current Money: ${currentMoney}");
+
+        // Targets are 600, 900, 1200. Adding 2000 will satisfy any night.
+        int winAmount = 2000;
+        Log($"Adding ${winAmount} to win the night...");
+        
+        GameEventAPI.OnAddMoney?.Invoke(winAmount);
+        
+        yield return new WaitForSecondsRealtime(1.0f); // Use realtime because timescale is 0
+
+        // In this new system, the night doesn't advance UNTIL the player clicks the button.
+        // So we just check if the game is paused (which indicates the Win UI is shown).
+        if (Time.timeScale == 0f)
+        {
+            LogPass("Win condition met and UI displayed (Game Paused). Please click Next Level manually.");
+        }
+        else
+        {
+            LogFail("Win condition might not have triggered (Game not paused).");
+        }
+
+        Log("Win Night Test Complete.");
     }
 
     // ============================================================

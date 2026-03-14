@@ -23,6 +23,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Night_01.unity
     guid: ed185c104d319a14abca3610d8bfd604
+  - enabled: 1
+    path: Assets/Scenes/Night_02.unity
+    guid: 7f214988004994c46b80951d467c192a
+  - enabled: 1
+    path: Assets/Scenes/Night_03.unity
+    guid: 360808950ebeaf44bb0e9297b60efb5e
   m_configObjects:
     com.unity.adaptiveperformance.google.android.provider_settings: {fileID: 11400000, guid: 5d506c2cce92f464fbc61c1017cebde1, type: 2}
     com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: e3b0f5c8d34deb542be9e8d04eb31f6f, type: 2}

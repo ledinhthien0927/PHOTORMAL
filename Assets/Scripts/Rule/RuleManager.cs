@@ -26,6 +26,9 @@ public class RuleManager : MonoBehaviour
     // Lưu tạm thời gian vi phạm tiếng bước chân (người chơi có 5s để vào WC)
     private float footstepViolationTimer = 0f;
 
+    // Lưu tạm thời gian vi phạm sinh đôi (người chơi có 5s để tắt đèn)
+    private float twinsViolationTimer = 0f;
+
     private void Awake()
     {
         Instance = this;
@@ -61,6 +64,7 @@ public class RuleManager : MonoBehaviour
         clownPatienceTimer = 0f;
         backDoorOpenTimer = 0f;
         footstepViolationTimer = 0f;
+        twinsViolationTimer = 0f;
 
         // Đêm 1
         activeRules.Add(RuleType.NoFlickerShoot);
@@ -201,6 +205,10 @@ public class RuleManager : MonoBehaviour
                 // Tùy design, có thể khóa cửa lại tự động hoặc ép player phải khóa.
             }
         }
+        else
+        {
+            backDoorOpenTimer = 0f;
+        }
     }
 
     /// <summary> Quy tắc: Vào WC khi có tiếng chân </summary>
@@ -232,9 +240,27 @@ public class RuleManager : MonoBehaviour
     {
         if (!activeRules.Contains(RuleType.TwinsTurnOffLight)) return;
 
-        // Nếu sinh đôi đang ở đó mà đèn VẪN bật -> Không sao nếu event vừa nổ,
-        // Nhưng nếu để quá lâu (ví dụ 5 giây) mà chưa tắt đèn -> Lỗi
-        // (Sẽ triển khai timer trong script TwinEvent hoặc ở đây).
+        // Nếu sinh đôi đang ở đó mà đèn VẪN bật
+        if (RuleContext.Instance.HasTwinsAppeared && RuleContext.Instance.IsLivingRoomLightOn)
+        {
+            twinsViolationTimer += Time.deltaTime;
+
+            if (twinsViolationTimer >= 5f)
+            {
+                BreakRule(RuleType.TwinsTurnOffLight);
+                
+                // Sau khi phạt, ép cặp sinh đôi biến mất để không phạt tiếp
+                RuleContext.Instance.HasTwinsAppeared = false;
+                GameEventAPI.OnTwinsPresenceChanged?.Invoke(false);
+                
+                twinsViolationTimer = 0f;
+            }
+        }
+        else
+        {
+            // Nếu đã tắt đèn hoặc sinh đôi tự biến mất (do hết event) -> Reset timer
+            twinsViolationTimer = 0f;
+        }
     }
 
     /// <summary> Quy tắc: Khách vào studio xong phải hoàn thành trong 15s (Đêm 2) </summary>
