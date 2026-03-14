@@ -9,6 +9,7 @@ public class PopupManager : MonoBehaviour, IGameEvent
     [SerializeField] private GameObject gameplayCanvas;
     [SerializeField] private GameObject gameOverPopup;
     [SerializeField] private GameObject winNightPopup;
+    [SerializeField] private GameObject pausePopup;
 
     [Header("Scene Configuration")]
     [SerializeField] private string mainMenuSceneName = "MainMenu";
@@ -29,6 +30,7 @@ public class PopupManager : MonoBehaviour, IGameEvent
         // Initialize popups to hidden state
         if (gameOverPopup != null) gameOverPopup.SetActive(false);
         if (winNightPopup != null) winNightPopup.SetActive(false);
+        if (pausePopup != null) pausePopup.SetActive(false);
     }
 
     private void Start()
@@ -60,6 +62,18 @@ public class PopupManager : MonoBehaviour, IGameEvent
         DisplayPopup(gameOverPopup);
     }
 
+    public void PauseGame()
+    {
+        Debug.Log("[PopupManager] Game Paused!");
+        DisplayPopup(pausePopup);
+    }
+
+    public void ResumeGame()
+    {
+        Debug.Log("[PopupManager] Game Resumed!");
+        ClosePopups();
+    }
+
     private void DisplayPopup(GameObject popup)
     {
         if (popup != null)
@@ -68,10 +82,6 @@ public class PopupManager : MonoBehaviour, IGameEvent
             Time.timeScale = 0f;
             if (gameplayCanvas != null) gameplayCanvas.SetActive(false);
             popup.SetActive(true);
-            
-            // Unlock/Show cursor
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
         }
         else
         {
@@ -136,6 +146,7 @@ public class PopupManager : MonoBehaviour, IGameEvent
         ResumeTime();
         if (gameOverPopup != null) gameOverPopup.SetActive(false);
         if (winNightPopup != null) winNightPopup.SetActive(false);
+        if (pausePopup != null) pausePopup.SetActive(false);
         if (gameplayCanvas != null) gameplayCanvas.SetActive(true);
     }
 }
