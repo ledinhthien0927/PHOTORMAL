@@ -453,6 +453,8 @@ MonoBehaviour:
   closeText: Close door
   locked: 0
   lockedText: Locked
+  openSound: {fileID: 0}
+  closeSound: {fileID: 0}
 --- !u!208 &70900481
 NavMeshObstacle:
   m_ObjectHideFlags: 0
@@ -1259,6 +1261,7 @@ MonoBehaviour:
   width: 512
   height: 512
   uiRoot: {fileID: 71278597}
+  cameraShotSound: {fileID: 0}
 --- !u!114 &128890716
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1755,6 +1758,7 @@ MonoBehaviour:
   copyInput: {fileID: 1174085526}
   printButton: {fileID: 1996135098}
   closeButton: {fileID: 1596543065}
+  printSound: {fileID: 0}
   printedPhotoPrefab: {fileID: 9159441686680063546, guid: 50c0f36c0e153034da7796f3438e1bf3, type: 3}
   printedPhotoSpawnPoint: {fileID: 1007369045}
   paperValueText: {fileID: 280616965}
@@ -4557,6 +4561,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3885c721f9c9f55428ba84cf718ed9fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  customerServiceTimeLimit: 15
+  ruleViolationGracePeriod: 5
+  serviceCountdown: 0
+  backDoorCountdown: 0
+  footstepCountdown: 0
+  twinsCountdown: 0
+  clownCountdown: 0
 --- !u!114 &525386651
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4577,8 +4588,9 @@ MonoBehaviour:
   IsLivingRoomLightOn: 1
   IsBackDoorLocked: 1
   IsPlayerInToilet: 0
-  StudioEnterTime: 5
+  StudioEnterTime: 20
   ClownAppearTime: 2
+  CustomerServiceStartTime: 0
 --- !u!1 &528983783
 GameObject:
   m_ObjectHideFlags: 0
@@ -6713,6 +6725,8 @@ MonoBehaviour:
   closeText: Close door
   locked: 0
   lockedText: Locked
+  openSound: {fileID: 0}
+  closeSound: {fileID: 0}
 --- !u!208 &857467402
 NavMeshObstacle:
   m_ObjectHideFlags: 0
@@ -11897,6 +11911,8 @@ MonoBehaviour:
   closeText: Close door
   locked: 0
   lockedText: Locked
+  openSound: {fileID: 0}
+  closeSound: {fileID: 0}
 --- !u!64 &1853916588
 MeshCollider:
   m_ObjectHideFlags: 0

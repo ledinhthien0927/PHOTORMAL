@@ -801,6 +801,15 @@ public class GameSystemTest : MonoBehaviour
         // Managers 
         sb.AppendLine("--- Singletons ---");
         sb.AppendLine($"RuleManager: {(RuleManager.Instance != null ? "OK" : "NULL")}");
+        if (RuleManager.Instance != null)
+        {
+            sb.Append("  Active Rules: ");
+            foreach (var rule in RuleManager.Instance.ActiveRules)
+            {
+                sb.Append(rule.ToString() + ", ");
+            }
+            sb.AppendLine();
+        }
         sb.AppendLine($"EventManager: {(EventManager.Instance != null ? "OK" : "NULL")}");
         sb.AppendLine($"NightManager: {(NightManager.Instance != null ? "OK" : "NULL")}");
         sb.AppendLine($"CustomerQueueManager: {(CustomerQueueManager.Instance != null ? "OK" : "NULL")}");

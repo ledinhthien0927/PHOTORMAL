@@ -267,6 +267,8 @@ public class CustomerController : MonoBehaviour, IInteractable
             state = CustomerState.GoingToPhotoSpot;
             agent.isStopped = false;
             agent.SetDestination(photoSpot.position);
+
+            GameEventAPI.OnCustomerInvitedToStudio?.Invoke();
             return;
         }
 
@@ -320,6 +322,8 @@ public class CustomerController : MonoBehaviour, IInteractable
             );
             return;
         }
+
+        GameEventAPI.OnCustomerReceivedCorrectPhoto?.Invoke();
 
         int reward = 15 * currentOrder.quantity;
         if (GameProgress.Instance != null)

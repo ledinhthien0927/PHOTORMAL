@@ -16,6 +16,18 @@ public class RuleManager : MonoBehaviour
     public static RuleManager Instance;
 
     private HashSet<RuleType> activeRules = new();
+    public IEnumerable<RuleType> ActiveRules => activeRules;
+
+    [Header("Rule Settings")]
+    [SerializeField] private float customerServiceTimeLimit = 15f;
+    [SerializeField] private float ruleViolationGracePeriod = 5f;
+
+    [Header("Debug Status (Read Only)")]
+    [SerializeField] private float serviceCountdown;
+    [SerializeField] private float backDoorCountdown;
+    [SerializeField] private float footstepCountdown;
+    [SerializeField] private float twinsCountdown;
+    [SerializeField] private float clownCountdown;
     
     // Lưu tạm thời gian Clown xuất hiện để đếm ngược 5s Instant GameOver
     private float clownPatienceTimer = 0f;
@@ -44,6 +56,8 @@ public class RuleManager : MonoBehaviour
         GameEventAPI.OnPlayerStudioStateChanged += HandleStudioState;
         GameEventAPI.OnPlayerToiletStateChanged += HandleToiletState;
         GameEventAPI.OnPlayerPickUpDelivery += HandlePlayerPickUpDelivery;
+        GameEventAPI.OnCustomerInvitedToStudio += HandleCustomerInvited;
+        GameEventAPI.OnCustomerReceivedCorrectPhoto += HandleCustomerReceivedPhoto;
     }
 
     private void OnDisable()
@@ -56,6 +70,8 @@ public class RuleManager : MonoBehaviour
         GameEventAPI.OnPlayerStudioStateChanged -= HandleStudioState;
         GameEventAPI.OnPlayerToiletStateChanged -= HandleToiletState;
         GameEventAPI.OnPlayerPickUpDelivery -= HandlePlayerPickUpDelivery;
+        GameEventAPI.OnCustomerInvitedToStudio -= HandleCustomerInvited;
+        GameEventAPI.OnCustomerReceivedCorrectPhoto -= HandleCustomerReceivedPhoto;
     }
 
     public void SetupRules(int night)
@@ -174,6 +190,18 @@ public class RuleManager : MonoBehaviour
         RuleContext.Instance.IsPlayerInToilet = isInside;
     }
 
+    private void HandleCustomerInvited()
+    {
+        RuleContext.Instance.CustomerServiceStartTime = Time.time;
+        Debug.Log("[RuleManager] Customer Invited. Service timer started.");
+    }
+
+    private void HandleCustomerReceivedPhoto()
+    {
+        RuleContext.Instance.CustomerServiceStartTime = 0f;
+        Debug.Log("[RuleManager] Customer received photo. Service timer stopped.");
+    }
+
     // ===============================
     // CONTINUOUS CHECKS (UPDATE)
     // ===============================
@@ -196,18 +224,20 @@ public class RuleManager : MonoBehaviour
         if (!RuleContext.Instance.IsBackDoorLocked && !RuleContext.Instance.IsClownAppeared)
         {
             backDoorOpenTimer += Time.deltaTime;
+            backDoorCountdown = ruleViolationGracePeriod - backDoorOpenTimer;
             
             // Nếu người chơi đã mở quá 5 giây mà chưa đóng (kể cả trong sự kiện lấy hàng)
-            if (backDoorOpenTimer >= 5f)
+            if (backDoorOpenTimer >= ruleViolationGracePeriod)
             {
                 BreakRule(RuleType.BackDoorLocked);
                 backDoorOpenTimer = 0f; // Tránh nổ lỗi liên tục
-                // Tùy design, có thể khóa cửa lại tự động hoặc ép player phải khóa.
+                backDoorCountdown = 0f;
             }
         }
         else
         {
             backDoorOpenTimer = 0f;
+            backDoorCountdown = 0f;
         }
     }
 
@@ -220,19 +250,22 @@ public class RuleManager : MonoBehaviour
         if (RuleContext.Instance.IsFootstepActive && !RuleContext.Instance.IsPlayerInToilet)
         {
             footstepViolationTimer += Time.deltaTime;
+            footstepCountdown = ruleViolationGracePeriod - footstepViolationTimer;
 
             // Nếu đứng ngoài quá 5 giây thì mới phạt
-            if (footstepViolationTimer >= 5.0f)
+            if (footstepViolationTimer >= ruleViolationGracePeriod)
             {
                 BreakRule(RuleType.HideWhenFootstep);
                 RuleContext.Instance.IsFootstepActive = false; // Tắt trạng thái để không nổ lỗi liên tục
                 footstepViolationTimer = 0f;
+                footstepCountdown = 0f;
             }
         }
         else
         {
             // Nếu người chơi đã vào WC hoặc hết tiếng chân -> Reset timer
             footstepViolationTimer = 0f;
+            footstepCountdown = 0f;
         }
     }
 
@@ -244,8 +277,9 @@ public class RuleManager : MonoBehaviour
         if (RuleContext.Instance.HasTwinsAppeared && RuleContext.Instance.IsLivingRoomLightOn)
         {
             twinsViolationTimer += Time.deltaTime;
+            twinsCountdown = ruleViolationGracePeriod - twinsViolationTimer;
 
-            if (twinsViolationTimer >= 5f)
+            if (twinsViolationTimer >= ruleViolationGracePeriod)
             {
                 BreakRule(RuleType.TwinsTurnOffLight);
                 
@@ -254,26 +288,40 @@ public class RuleManager : MonoBehaviour
                 GameEventAPI.OnTwinsPresenceChanged?.Invoke(false);
                 
                 twinsViolationTimer = 0f;
+                twinsCountdown = 0f;
             }
         }
         else
         {
             // Nếu đã tắt đèn hoặc sinh đôi tự biến mất (do hết event) -> Reset timer
             twinsViolationTimer = 0f;
+            twinsCountdown = 0f;
         }
     }
 
     /// <summary> Quy tắc: Khách vào studio xong phải hoàn thành trong 15s (Đêm 2) </summary>
     void CheckStudioTimeLimit()
     {
-        if (!activeRules.Contains(RuleType.StudioTimeLimit)) return;
+        if (!activeRules.Contains(RuleType.StudioTimeLimit)) 
+        {
+            serviceCountdown = 0f;
+            return;
+        }
 
-        if (RuleContext.Instance.StudioEnterTime <= 0) return;
+        if (RuleContext.Instance.CustomerServiceStartTime <= 0) 
+        {
+            serviceCountdown = 0f;
+            return;
+        }
 
-        if (Time.time - RuleContext.Instance.StudioEnterTime > 15f)
+        float elapsed = Time.time - RuleContext.Instance.CustomerServiceStartTime;
+        serviceCountdown = customerServiceTimeLimit - elapsed;
+
+        if (elapsed > customerServiceTimeLimit)
         {
             BreakRule(RuleType.StudioTimeLimit);
-            RuleContext.Instance.StudioEnterTime = 0f; // Tránh nổ lỗi nhiều lần
+            RuleContext.Instance.CustomerServiceStartTime = 0f; // Tránh nổ lỗi nhiều lần
+            serviceCountdown = 0f;
         }
     }
 
@@ -282,19 +330,22 @@ public class RuleManager : MonoBehaviour
     {
         if (!activeRules.Contains(RuleType.ClownDoorOpen)) return;
 
-        if (!RuleContext.Instance.IsClownAppeared) return;
+        if (!RuleContext.Instance.IsClownAppeared) 
+        {
+            clownCountdown = 0f;
+            return;
+        }
 
         // Tên hề đang chờ ở cửa
         clownPatienceTimer += Time.deltaTime;
+        clownCountdown = ruleViolationGracePeriod - clownPatienceTimer;
 
-        if (clownPatienceTimer >= 5f)
+        if (clownPatienceTimer >= ruleViolationGracePeriod)
         {
             // Quá 5s k mở -> Jumpscare Instant GameOver (theo design document: "chớp tắt đèn, jumpscare")
-            // Coder B sẽ lắng nghe sự kiện này, phát Jumpscare trong vài giây rối gọi GameOver.
             GameEventAPI.OnClownJumpscare?.Invoke();
-            
-            // EventManager.Instance.TriggerEvent("InstantGameOver");
             RuleContext.Instance.IsClownAppeared = false; // Ngừng lặp
+            clownCountdown = 0f;
         }
     }
 

@@ -84,4 +84,10 @@ public static class GameEventAPI
     /// Sự kiện: Khi 1 khách hàng đã hoàn thành phiên của họ (Destroy). 
     /// CustomerQueueManager lắng nghe để biết khi nào có thể spawn khách tiếp theo.
     public static Action OnCustomerCompleted;
+
+    /// Yêu cầu đếm ngược: Player bấm mời khách vào Studio
+    public static Action OnCustomerInvitedToStudio;
+
+    /// Yêu cầu đếm ngược kết thúc: Khách nhận đúng ảnh
+    public static Action OnCustomerReceivedCorrectPhoto;
 }
