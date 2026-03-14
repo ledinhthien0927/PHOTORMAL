@@ -7,7 +7,10 @@ public sealed class CameraController : MonoBehaviour
     [SerializeField] private int height = 512;
 
     [Header("UI To Hide While Shooting")]
-    [SerializeField] private GameObject uiRoot; // Assign your main UI canvas root
+    [SerializeField] private GameObject uiRoot;
+
+    [Header("Audio")]
+    [SerializeField] private AudioClip cameraShotSound;
 
     public void CapturePhoto(System.Action<Texture2D> onDone)
     {
@@ -16,15 +19,16 @@ public sealed class CameraController : MonoBehaviour
 
     private IEnumerator CaptureRoutine(System.Action<Texture2D> onDone)
     {
-        // Hide UI before capture
         if (uiRoot != null)
             uiRoot.SetActive(false);
 
         yield return new WaitForEndOfFrame();
 
+        // CAMERA SOUND
+        AudioManager.Instance?.PlaySFX(cameraShotSound);
+
         Texture2D tex = ScreenCapture.CaptureScreenshotAsTexture();
 
-        // Restore UI immediately
         if (uiRoot != null)
             uiRoot.SetActive(true);
 
