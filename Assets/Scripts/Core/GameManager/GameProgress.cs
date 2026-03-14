@@ -101,6 +101,13 @@ public class GameProgress : MonoBehaviour
         OnErrorChanged?.Invoke(CurrentError);
     }
 
+    public void ResetTotalProgress()
+    {
+        CurrentNight = 1;
+        ResetNightData();
+        OnNightChanged?.Invoke(CurrentNight);
+    }
+
     public void NextNight()
     {
         CurrentNight++;
