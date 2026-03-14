@@ -19,6 +19,7 @@ public class RuleContext : MonoBehaviour
     // Timers
     public float StudioEnterTime;
     public float ClownAppearTime;
+    public float CustomerServiceStartTime; // Thời gian bắt đầu phục vụ (từ khi mời vào)
 
     private void Awake()
     {

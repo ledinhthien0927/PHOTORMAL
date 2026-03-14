@@ -4581,8 +4581,9 @@ MonoBehaviour:
   IsLivingRoomLightOn: 1
   IsBackDoorLocked: 1
   IsPlayerInToilet: 0
-  StudioEnterTime: 5
+  StudioEnterTime: 20
   ClownAppearTime: 2
+  CustomerServiceStartTime: 0
 --- !u!1 &528983783
 GameObject:
   m_ObjectHideFlags: 0
