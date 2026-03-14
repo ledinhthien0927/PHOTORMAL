@@ -3,7 +3,6 @@ using System.Collections;
 
 public class TwinsEvent : MonoBehaviour, IGameEvent
 {
-    [SerializeField] private float durationBeforeError = 10f; // Thời gian cho phép bật đèn trước khi dính lỗi
 
     public void Execute()
     {

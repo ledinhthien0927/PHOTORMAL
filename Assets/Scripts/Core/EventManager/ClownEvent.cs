@@ -8,7 +8,12 @@ public class ClownEvent : MonoBehaviour, IGameEvent
         if (GameProgress.Instance.CurrentNight >= 3)
         {
             RuleContext.Instance.IsClownAppeared = true;
-            Debug.Log("Sự kiện: Tên hề đứng ở cửa sau! (Mở cửa trong 5s)");
+            
+            // Reset timer in RuleManager when clown appears
+            if (RuleManager.Instance != null)
+                RuleManager.Instance.ResetClownTimer();
+
+            Debug.Log("Sự kiện: Tên hề đứng ở cửa sau! (Mở cửa trong x giây)");
             
             // Gọi ra API hệ thống để báo cho Coder B Spawn model Thằng hề ngoài cửa, phát âm thanh
             GameEventAPI.OnClownAppeared?.Invoke();

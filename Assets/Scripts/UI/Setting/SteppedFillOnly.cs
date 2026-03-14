@@ -18,17 +18,17 @@ public class SteppedFillOnly : MonoBehaviour
     [SerializeField] private Bar sound; // SOUND bar
     [SerializeField] private Bar music; // MUSIC bar
 
-    void Awake()
+    void Start() // Use Start to ensure AudioManager.Instance is ready
     {
         // Setup both bars (Sound + Music)
-        SetupBar(sound);
-        SetupBar(music);
+        SetupBar(sound, false); // isMusic = false
+        SetupBar(music, true);  // isMusic = true
     }
 
     /// <summary>
     /// Configures a slider to be stepped (0..5) and wires up the callback.
     /// </summary>
-    private void SetupBar(Bar bar)
+    private void SetupBar(Bar bar, bool isMusic)
     {
         if (bar == null || bar.slider == null || bar.fillImage == null) return;
 
@@ -37,10 +37,26 @@ public class SteppedFillOnly : MonoBehaviour
         bar.slider.maxValue = 5;
         bar.slider.wholeNumbers = true;
 
-        // When slider changes, refresh only this bar
-        bar.slider.onValueChanged.AddListener(_ => RefreshBar(bar));
+        // Initialize value from AudioManager
+        if (AudioManager.Instance != null)
+        {
+            float currentVol = isMusic ? AudioManager.Instance.MusicVolume : AudioManager.Instance.SFXVolume;
+            bar.slider.value = Mathf.RoundToInt(currentVol * 5f);
+        }
 
-        // Refresh once at start
+        // When slider changes, refresh visual and update AudioManager
+        bar.slider.onValueChanged.AddListener(val => 
+        {
+            RefreshBar(bar);
+            if (AudioManager.Instance != null)
+            {
+                float normalizedVol = val / 5f;
+                if (isMusic) AudioManager.Instance.SetMusicVolume(normalizedVol);
+                else AudioManager.Instance.SetSFXVolume(normalizedVol);
+            }
+        });
+
+        // Initial visual refresh
         RefreshBar(bar);
     }
 

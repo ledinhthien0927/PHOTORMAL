@@ -8,8 +8,7 @@ public class EnvironmentEffectController : MonoBehaviour, IGameEvent
     [SerializeField] private float flickerSpeed = 0.1f;
 
     [Header("Audio")]
-    [SerializeField] private AudioSource footstepAudioSource;
-    [SerializeField] private AudioSource knockDoorAudioSource;
+    // Footstep and Knock audio are now managed via AudioManager
 
     [Header("Models & GameObjects")]
     [SerializeField] private GameObject twinsModel;
@@ -104,11 +103,9 @@ public class EnvironmentEffectController : MonoBehaviour, IGameEvent
 
     private void HandleFootstep(bool isPlaying)
     {
-        if (footstepAudioSource != null)
+        if (AudioManager.Instance != null)
         {
-            footstepAudioSource.loop = isPlaying; // Bật loop để âm thanh không bị ngắt giữa chừng
-            if (isPlaying) footstepAudioSource.Play();
-            else footstepAudioSource.Stop();
+            AudioManager.Instance.PlayFootstep(isPlaying);
         }
     }
 
@@ -117,6 +114,10 @@ public class EnvironmentEffectController : MonoBehaviour, IGameEvent
         if (clownModel != null)
         {
             clownModel.SetActive(true);
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayClownAppear();
+            }
         }
     }
 
@@ -136,9 +137,9 @@ public class EnvironmentEffectController : MonoBehaviour, IGameEvent
 
     private void HandleDeliveryKnock()
     {
-        if (knockDoorAudioSource != null)
+        if (AudioManager.Instance != null)
         {
-            knockDoorAudioSource.Play();
+            AudioManager.Instance.PlayKnockDoor();
         }
     }
 

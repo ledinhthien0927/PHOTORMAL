@@ -28,17 +28,36 @@ public class GameSystemTest : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F1)) RunTest(TestCustomerSpawn());
-        if (Input.GetKeyDown(KeyCode.F2)) RunTest(TestRule_NoFlickerShoot());
-        if (Input.GetKeyDown(KeyCode.F3)) RunTest(TestRule_TwinsTurnOffLight());
-        if (Input.GetKeyDown(KeyCode.F4)) RunTest(TestRule_BackDoorLocked());
-        if (Input.GetKeyDown(KeyCode.F5)) RunTest(TestRule_HideWhenFootstep());
-        if (Input.GetKeyDown(KeyCode.F6)) RunTest(TestRule_StudioTimeLimit());
-        if (Input.GetKeyDown(KeyCode.F7)) RunTest(TestRule_ClownDoorOpen());
-        if (Input.GetKeyDown(KeyCode.F8)) RunTest(TestItemInteractions());
-        if (Input.GetKeyDown(KeyCode.F9)) RunTest(TestFullGameLoop());
+        // SYSTEM TRIGGERS (Environment Threats)
+        if (Input.GetKeyDown(KeyCode.F1)) RunTrigger("CustomerSpawn"); // Not strictly an event yet, but keeping for flow
+        if (Input.GetKeyDown(KeyCode.F2)) RunTrigger("FlickerLight");
+        if (Input.GetKeyDown(KeyCode.F3)) RunTrigger("Twins");
+        if (Input.GetKeyDown(KeyCode.F4)) ToggleBackDoor();
+        if (Input.GetKeyDown(KeyCode.F5)) RunTrigger("Footstep");
+        if (Input.GetKeyDown(KeyCode.F6)) RunTrigger("ShowWarningUI"); 
+        if (Input.GetKeyDown(KeyCode.F7)) RunTrigger("Clown");
+        if (Input.GetKeyDown(KeyCode.F8)) RunTrigger("Delivery");
+        
+        // SYSTEM TOOLS
+        if (Input.GetKeyDown(KeyCode.F9)) RunTest(TestFullGameLoop()); // Keep for logic testing
         if (Input.GetKeyDown(KeyCode.F10)) DumpStatus();
         if (Input.GetKeyDown(KeyCode.F11)) RunTest(TestWinNight());
+    }
+
+    private void RunTrigger(string eventName)
+    {
+        Log($"Triggering System Event: {eventName}");
+        if (EventManager.Instance != null)
+            EventManager.Instance.TriggerEvent(eventName);
+        else
+            LogFail("EventManager instance not found!");
+    }
+
+    private void ToggleBackDoor()
+    {
+        bool newState = !RuleContext.Instance.IsBackDoorLocked;
+        Log($"Toggling BackDoor Locked State to: {newState}");
+        GameEventAPI.OnBackDoorStateChanged?.Invoke(newState);
     }
 
     private void RunTest(IEnumerator testRoutine)

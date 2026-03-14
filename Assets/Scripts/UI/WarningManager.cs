@@ -51,6 +51,11 @@ public class WarningManager : MonoBehaviour, IGameEvent
         isWarningActive = true;
         warningPanel.SetActive(true);
         countdownTimer = 5f;
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySupportCall();
+        }
     }
 
     private void Update()
@@ -79,7 +84,10 @@ public class WarningManager : MonoBehaviour, IGameEvent
             warningPanel.SetActive(false);
             Debug.Log("Đã gọi Support kịp thời. Thoát nạn.");
             
-            // Có thể thêm âm thanh Call Support tại đây
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.StopSupportCall();
+            }
         }
     }
 }
