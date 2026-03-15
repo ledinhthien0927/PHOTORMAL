@@ -11,6 +11,8 @@ public class CustomerSpawner : MonoBehaviour
     public Transform standByPC;
     public Transform photoSpot;
     public Transform exitPoint;
+    public Transform outsidePoint;
+    public Transform insidePoint;
 
     [Header("Door Blocker (Collider)")]
     public Collider mainDoorBlocker;
@@ -35,8 +37,6 @@ public class CustomerSpawner : MonoBehaviour
 
     private void Start()
     {
-        // Spawn special models (Twins / Clown) at hidden points,
-        // ready for event activation.
         SpawnSpecialModels();
     }
 
@@ -53,14 +53,12 @@ public class CustomerSpawner : MonoBehaviour
             return;
         }
 
-        // Spawn Twins
         if (twinsPrefab != null && twinsSpawnPoint != null)
         {
             GameObject twins = Instantiate(twinsPrefab, twinsSpawnPoint.position, twinsSpawnPoint.rotation);
             effectController.SetTwinsModel(twins);
         }
 
-        // Spawn Clown
         if (clownPrefab != null && clownSpawnPoint != null)
         {
             GameObject clown = Instantiate(clownPrefab, clownSpawnPoint.position, clownSpawnPoint.rotation);
@@ -68,7 +66,6 @@ public class CustomerSpawner : MonoBehaviour
         }
     }
 
-    /// Spawn one normal customer. Called by CustomerQueueManager.
     [ContextMenu("Spawn Normal Customer")]
     public void SpawnNormalCustomer()
     {
@@ -77,9 +74,6 @@ public class CustomerSpawner : MonoBehaviour
             Debug.LogError("[CustomerSpawner] Missing prefab list/spawnPoint/standByPC/photoSpot/exitPoint.");
             return;
         }
-
-        // Pick a random prefab from the normal customer list.
-        //CustomerController prefab = normalCustomerPrefabs[Random.Range(0, normalCustomerPrefabs.Count)];
 
         CustomerController prefab = normalCustomerPrefabs[currentIndex];
         currentIndex = (currentIndex + 1) % normalCustomerPrefabs.Count;
@@ -90,15 +84,11 @@ public class CustomerSpawner : MonoBehaviour
             spawnPoint.rotation
         );
 
-        // Initialize movement flow.
-        customer.Init(standByPC, mainDoorBlocker, photoSpot, exitPoint);
-
-        // Inject scene references.
+        customer.Init(standByPC, mainDoorBlocker, photoSpot, exitPoint, outsidePoint, insidePoint);
         customer.SetOrderService(orderService);
         customer.SetPlayer(player);
     }
 
-    /// <summary> Spawn the clown as a customer phase. </summary>
     public void SpawnClownCustomer()
     {
         if (clownCustomerPrefab == null)
@@ -115,7 +105,7 @@ public class CustomerSpawner : MonoBehaviour
         );
 
         customer.isClown = true;
-        customer.Init(standByPC, mainDoorBlocker, photoSpot, exitPoint);
+        customer.Init(standByPC, mainDoorBlocker, photoSpot, exitPoint, outsidePoint, insidePoint);
         customer.SetOrderService(orderService);
         customer.SetPlayer(player);
     }

@@ -20,6 +20,19 @@ public class CustomerController : MonoBehaviour, IInteractable
         Completed
     }
 
+    private enum GateMovePhase
+    {
+        None,
+        EnteringDirectToPC,
+        MovingToOutside,
+        WaitingOutsideDoorOpen,
+        EnteringFromOutsideToPC,
+        ExitingDirectToExit,
+        MovingToInside,
+        WaitingInsideDoorOpen,
+        ExitingFromInsideToExit
+    }
+
     [Header("Flow Timers")]
     public float firstCheckDelay = 5f;
     public float recheckInterval = 0.5f;
@@ -46,9 +59,12 @@ public class CustomerController : MonoBehaviour, IInteractable
     private Transform standByPC;
     private Transform photoSpot;
     private Transform exitPoint;
+    private Transform outsidePoint;
+    private Transform insidePoint;
     private Collider mainDoorBlocker;
 
     private CustomerState state;
+    private GateMovePhase gateMovePhase;
     private OrderPopupUI popupInstance;
 
     private PhotoOrderService orderService;
@@ -58,19 +74,18 @@ public class CustomerController : MonoBehaviour, IInteractable
     private bool notifiedReady;
     private bool hasPhotoTaken;
     private bool listeningPhotoEvent;
-    private bool waitingForExitDoorRoutine;
 
     private static readonly string[] paymentMessages =
-{
-    "Perfect! Here is your payment:",
-    "Great job! Here's your payment:",
-    "Looks amazing! Your payment:",
-    "Excellent work! You earned:",
-    "Exactly what I wanted! Here you go:",
-    "Fantastic print! Your reward:",
-    "That's perfect! Here's your money:",
-    "Nice work! Payment received:"
-};
+    {
+        "Perfect! Here is your payment:",
+        "Great job! Here's your payment:",
+        "Looks amazing! Your payment:",
+        "Excellent work! You earned:",
+        "Exactly what I wanted! Here you go:",
+        "Fantastic print! Your reward:",
+        "That's perfect! Here's your money:",
+        "Nice work! Payment received:"
+    };
 
     public string Prompt
     {
@@ -124,7 +139,7 @@ public class CustomerController : MonoBehaviour, IInteractable
     {
         agent = GetComponent<NavMeshAgent>();
         if (agent == null) agent = GetComponentInChildren<NavMeshAgent>();
-        
+
         customerAnimator = GetComponent<CustomerAnimator>();
         if (customerAnimator == null) customerAnimator = GetComponentInChildren<CustomerAnimator>();
     }
@@ -139,21 +154,24 @@ public class CustomerController : MonoBehaviour, IInteractable
         Transform standByPcPoint,
         Collider mainDoorBlockerCollider,
         Transform photoSpotPoint,
-        Transform exitPointTransform
-    )
+        Transform exitPointTransform,
+        Transform outsidePointTransform,
+        Transform insidePointTransform)
     {
         Debug.Log($"[CustomerController] {name} Init called. isClown: {isClown}");
+
         standByPC = standByPcPoint;
         mainDoorBlocker = mainDoorBlockerCollider;
         photoSpot = photoSpotPoint;
         exitPoint = exitPointTransform;
+        outsidePoint = outsidePointTransform;
+        insidePoint = insidePointTransform;
 
         state = CustomerState.WaitingDoorCheck;
+        gateMovePhase = GateMovePhase.None;
 
         if (isClown)
         {
-            // Unified Clown Logic: Trigger event immediately on spawn
-            // This starts the countdown and sounds
             RuleContext.Instance.IsClownAppeared = true;
             if (RuleManager.Instance != null) RuleManager.Instance.ResetClownTimer();
             GameEventAPI.OnClownAppeared?.Invoke();
@@ -178,30 +196,15 @@ public class CustomerController : MonoBehaviour, IInteractable
         Debug.Log($"[CustomerController] {name} FlowRoutine started. Delay: {firstCheckDelay}");
         yield return new WaitForSeconds(firstCheckDelay);
 
-        state = CustomerState.WaitingDoorOpen;
-        Debug.Log($"[CustomerController] {name} state: WaitingDoorOpen. Checking door block...");
-
-        while (IsMainDoorClosed())
-            yield return new WaitForSeconds(recheckInterval);
-
-        Debug.Log($"[CustomerController] {name} door is open! Preparing to move to PC.");
-
         if (standByPC != null && agent != null)
         {
-            state = CustomerState.GoingToPC;
-            
-            // Ensure agent is on NavMesh
             if (!agent.isOnNavMesh)
             {
                 Debug.LogWarning($"[CustomerController] {name} is not on NavMesh! Attempting to warp.");
                 agent.Warp(transform.position);
             }
 
-            agent.isStopped = false;
-            agent.SetDestination(standByPC.position);
-            if (customerAnimator != null) customerAnimator.SetWalking(true);
-            
-            Debug.Log($"[CustomerController] {name} destination set to {standByPC.position}. Agent speed: {agent.speed}");
+            BeginEnterFlow();
         }
         else
         {
@@ -212,42 +215,279 @@ public class CustomerController : MonoBehaviour, IInteractable
 
     private void Update()
     {
-        if (state == CustomerState.GoingToPC && ReachedDestination())
-        {
-            state = CustomerState.WaitingPickupAtPC;
-            if (customerAnimator != null) customerAnimator.SetWalking(false);
+        UpdateGateMovement();
 
-            GenerateOrder();
-            SpawnPopupForOrder();
-        }
-        else if (state == CustomerState.GoingToPhotoSpot && ReachedDestination())
+        if (state == CustomerState.GoingToPhotoSpot && ReachedDestination())
         {
             state = CustomerState.WaitingShootDone;
-            if (customerAnimator != null) customerAnimator.SetWalking(false);
+            StopMovement();
 
             if (StudioManager.Instance != null)
                 StudioManager.Instance.SetCurrentCustomer(this);
 
             hasPhotoTaken = false;
-
             NotifyReady(true);
             StartListeningPhotoCaptured();
         }
         else if (state == CustomerState.ReturningToPC && ReachedDestination())
         {
             state = CustomerState.WaitingPrintAtPC;
-            if (customerAnimator != null) customerAnimator.SetWalking(false);
+            StopMovement();
 
             if (StudioManager.Instance != null)
                 StudioManager.Instance.UnlockPrinting();
         }
-        else if (state == CustomerState.GoingToExit && ReachedDestination())
-        {
-            if (customerAnimator != null) customerAnimator.SetWalking(false);
-            FinishAndDestroy();
-        }
 
         LookAtPlayer();
+    }
+
+    private void UpdateGateMovement()
+    {
+        if (state == CustomerState.GoingToPC)
+        {
+            UpdateEnterFlow();
+            return;
+        }
+
+        if (state == CustomerState.GoingToExit)
+        {
+            UpdateExitFlow();
+        }
+    }
+
+    private void BeginEnterFlow()
+    {
+        state = CustomerState.GoingToPC;
+
+        if (IsMainDoorClosed() && outsidePoint != null)
+        {
+            MoveToOutsidePoint();
+            return;
+        }
+
+        gateMovePhase = GateMovePhase.EnteringDirectToPC;
+        MoveAgentTo(standByPC.position);
+    }
+
+    private void UpdateEnterFlow()
+    {
+        if (gateMovePhase == GateMovePhase.EnteringDirectToPC)
+        {
+            if (IsMainDoorClosed() && outsidePoint != null)
+            {
+                MoveToOutsidePoint();
+                return;
+            }
+
+            if (ReachedDestination())
+            {
+                ArriveAtPC();
+            }
+
+            return;
+        }
+
+        if (gateMovePhase == GateMovePhase.MovingToOutside)
+        {
+            if (!ReachedDestination())
+                return;
+
+            StopMovement();
+
+            if (IsMainDoorClosed())
+            {
+                gateMovePhase = GateMovePhase.WaitingOutsideDoorOpen;
+                state = CustomerState.WaitingDoorOpen;
+            }
+            else
+            {
+                StartMoveFromOutsideToPC();
+            }
+
+            return;
+        }
+
+        if (gateMovePhase == GateMovePhase.WaitingOutsideDoorOpen)
+        {
+            if (!IsMainDoorClosed())
+            {
+                StartMoveFromOutsideToPC();
+            }
+
+            return;
+        }
+
+        if (gateMovePhase == GateMovePhase.EnteringFromOutsideToPC)
+        {
+            if (ReachedDestination())
+            {
+                ArriveAtPC();
+            }
+        }
+    }
+
+    private void BeginExitFlow()
+    {
+        StopListeningPhotoCaptured();
+        NotifyReady(false);
+
+        if (StudioManager.Instance != null)
+            StudioManager.Instance.ClearCurrentCustomer();
+
+        if (popupInstance != null)
+            popupInstance.Hide();
+
+        if (exitPoint == null)
+        {
+            FinishAndDestroy();
+            return;
+        }
+
+        state = CustomerState.GoingToExit;
+
+        if (IsMainDoorClosed() && insidePoint != null)
+        {
+            MoveToInsidePoint();
+            return;
+        }
+
+        gateMovePhase = GateMovePhase.ExitingDirectToExit;
+        MoveAgentTo(exitPoint.position);
+    }
+
+    private void UpdateExitFlow()
+    {
+        if (gateMovePhase == GateMovePhase.ExitingDirectToExit)
+        {
+            if (IsMainDoorClosed() && insidePoint != null)
+            {
+                MoveToInsidePoint();
+                return;
+            }
+
+            if (ReachedDestination())
+            {
+                StopMovement();
+                FinishAndDestroy();
+            }
+
+            return;
+        }
+
+        if (gateMovePhase == GateMovePhase.MovingToInside)
+        {
+            if (!ReachedDestination())
+                return;
+
+            StopMovement();
+
+            if (IsMainDoorClosed())
+            {
+                gateMovePhase = GateMovePhase.WaitingInsideDoorOpen;
+                state = CustomerState.WaitingExitDoorOpen;
+            }
+            else
+            {
+                StartMoveFromInsideToExit();
+            }
+
+            return;
+        }
+
+        if (gateMovePhase == GateMovePhase.WaitingInsideDoorOpen)
+        {
+            if (!IsMainDoorClosed())
+            {
+                StartMoveFromInsideToExit();
+            }
+
+            return;
+        }
+
+        if (gateMovePhase == GateMovePhase.ExitingFromInsideToExit)
+        {
+            if (ReachedDestination())
+            {
+                StopMovement();
+                FinishAndDestroy();
+            }
+        }
+    }
+
+    private void MoveToOutsidePoint()
+    {
+        if (outsidePoint == null)
+        {
+            gateMovePhase = GateMovePhase.EnteringDirectToPC;
+            MoveAgentTo(standByPC.position);
+            return;
+        }
+
+        gateMovePhase = GateMovePhase.MovingToOutside;
+        state = CustomerState.GoingToPC;
+        MoveAgentTo(outsidePoint.position);
+    }
+
+    private void StartMoveFromOutsideToPC()
+    {
+        gateMovePhase = GateMovePhase.EnteringFromOutsideToPC;
+        state = CustomerState.GoingToPC;
+        MoveAgentTo(standByPC.position);
+    }
+
+    private void MoveToInsidePoint()
+    {
+        if (insidePoint == null)
+        {
+            gateMovePhase = GateMovePhase.ExitingDirectToExit;
+            MoveAgentTo(exitPoint.position);
+            return;
+        }
+
+        gateMovePhase = GateMovePhase.MovingToInside;
+        state = CustomerState.GoingToExit;
+        MoveAgentTo(insidePoint.position);
+    }
+
+    private void StartMoveFromInsideToExit()
+    {
+        gateMovePhase = GateMovePhase.ExitingFromInsideToExit;
+        state = CustomerState.GoingToExit;
+        MoveAgentTo(exitPoint.position);
+    }
+
+    private void ArriveAtPC()
+    {
+        state = CustomerState.WaitingPickupAtPC;
+        gateMovePhase = GateMovePhase.None;
+        StopMovement();
+
+        GenerateOrder();
+        SpawnPopupForOrder();
+    }
+
+    private void MoveAgentTo(Vector3 destination)
+    {
+        if (agent == null)
+            return;
+
+        agent.isStopped = false;
+        agent.SetDestination(destination);
+
+        if (customerAnimator != null)
+            customerAnimator.SetWalking(true);
+    }
+
+    private void StopMovement()
+    {
+        if (agent != null)
+        {
+            agent.isStopped = true;
+            agent.ResetPath();
+        }
+
+        if (customerAnimator != null)
+            customerAnimator.SetWalking(false);
     }
 
     private void NotifyReady(bool ready)
@@ -331,9 +571,8 @@ public class CustomerController : MonoBehaviour, IInteractable
                 popupInstance.Hide();
 
             state = CustomerState.GoingToPhotoSpot;
-            agent.isStopped = false;
-            agent.SetDestination(photoSpot.position);
-            if (customerAnimator != null) customerAnimator.SetWalking(true);
+            gateMovePhase = GateMovePhase.None;
+            MoveAgentTo(photoSpot.position);
 
             GameEventAPI.OnCustomerInvitedToStudio?.Invoke();
             return;
@@ -351,9 +590,8 @@ public class CustomerController : MonoBehaviour, IInteractable
                 StudioManager.Instance.LockPrinting();
 
             state = CustomerState.ReturningToPC;
-            agent.isStopped = false;
-            agent.SetDestination(standByPC.position);
-            if (customerAnimator != null) customerAnimator.SetWalking(true);
+            gateMovePhase = GateMovePhase.None;
+            MoveAgentTo(standByPC.position);
         }
     }
 
@@ -414,6 +652,7 @@ public class CustomerController : MonoBehaviour, IInteractable
             $"{message} +${reward}",
             3f
         );
+
         BeginExitFlow();
     }
 
@@ -461,56 +700,13 @@ public class CustomerController : MonoBehaviour, IInteractable
         BeginExitFlow();
     }
 
-    private void BeginExitFlow()
-    {
-        StopListeningPhotoCaptured();
-        NotifyReady(false);
-
-        if (StudioManager.Instance != null)
-        {
-            StudioManager.Instance.ClearCurrentCustomer();
-        }
-
-        if (popupInstance != null)
-            popupInstance.Hide();
-
-        if (exitPoint == null)
-        {
-            FinishAndDestroy();
-            return;
-        }
-
-        state = CustomerState.WaitingExitDoorOpen;
-        agent.isStopped = true;
-
-        if (!waitingForExitDoorRoutine)
-            StartCoroutine(WaitForExitDoorAndLeaveRoutine());
-    }
-
-    private IEnumerator WaitForExitDoorAndLeaveRoutine()
-    {
-        waitingForExitDoorRoutine = true;
-
-        while (state == CustomerState.WaitingExitDoorOpen && IsMainDoorClosed())
-            yield return new WaitForSeconds(recheckInterval);
-
-        waitingForExitDoorRoutine = false;
-
-        if (state != CustomerState.WaitingExitDoorOpen)
-            yield break;
-
-        state = CustomerState.GoingToExit;
-        agent.isStopped = false;
-        agent.SetDestination(exitPoint.position);
-        if (customerAnimator != null) customerAnimator.SetWalking(true);
-    }
-
     private void FinishAndDestroy(bool triggerEvent = true)
     {
         if (state == CustomerState.Completed)
             return;
 
         state = CustomerState.Completed;
+        gateMovePhase = GateMovePhase.None;
 
         if (triggerEvent)
             GameEventAPI.OnCustomerCompleted?.Invoke();
@@ -536,10 +732,16 @@ public class CustomerController : MonoBehaviour, IInteractable
         if (agent == null)
             return false;
 
+        if (!agent.isOnNavMesh)
+            return false;
+
         if (agent.pathPending)
             return false;
 
         if (agent.pathStatus == NavMeshPathStatus.PathInvalid)
+            return false;
+
+        if (agent.isStopped)
             return false;
 
         return agent.remainingDistance <= agent.stoppingDistance;
