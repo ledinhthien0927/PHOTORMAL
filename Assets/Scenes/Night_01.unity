@@ -3956,8 +3956,8 @@ MonoBehaviour:
   standByPC: {fileID: 697472796}
   photoSpot: {fileID: 827610758}
   exitPoint: {fileID: 39221096}
-  outsidePoint: {fileID: 124949465}
-  insidePoint: {fileID: 1984912073}
+  outsidePoint: {fileID: 1984912073}
+  insidePoint: {fileID: 124949465}
   mainDoorBlocker: {fileID: 70900479}
   orderService: {fileID: 1091814601}
   player: {fileID: 1232485419}
@@ -5384,13 +5384,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 629604859}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 2.1988082, y: -1.2011831, z: 0.09797871}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 14779574}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
 --- !u!1 &634678452
 GameObject:
   m_ObjectHideFlags: 0

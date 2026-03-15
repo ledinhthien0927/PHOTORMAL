@@ -9,28 +9,18 @@ public class CustomerController : MonoBehaviour, IInteractable
     {
         WaitingDoorCheck,
         WaitingDoorOpen,
+        GoingToOutside,
+        WaitingOutsideDoorOpen,
         GoingToPC,
         WaitingPickupAtPC,
         GoingToPhotoSpot,
         WaitingShootDone,
         ReturningToPC,
         WaitingPrintAtPC,
-        WaitingExitDoorOpen,
+        GoingToInside,
+        WaitingInsideDoorOpen,
         GoingToExit,
         Completed
-    }
-
-    private enum GateMovePhase
-    {
-        None,
-        EnteringDirectToPC,
-        MovingToOutside,
-        WaitingOutsideDoorOpen,
-        EnteringFromOutsideToPC,
-        ExitingDirectToExit,
-        MovingToInside,
-        WaitingInsideDoorOpen,
-        ExitingFromInsideToExit
     }
 
     [Header("Flow Timers")]
@@ -50,11 +40,11 @@ public class CustomerController : MonoBehaviour, IInteractable
     [SerializeField] private string finishText = "Finish session";
     [SerializeField] private string deliverText = "Give printed photo";
 
-    private NavMeshAgent agent;
-    private CustomerAnimator customerAnimator;
-
     [Header("Special Identity")]
     public bool isClown = false;
+
+    private NavMeshAgent agent;
+    private CustomerAnimator customerAnimator;
 
     private Transform standByPC;
     private Transform photoSpot;
@@ -64,7 +54,6 @@ public class CustomerController : MonoBehaviour, IInteractable
     private Collider mainDoorBlocker;
 
     private CustomerState state;
-    private GateMovePhase gateMovePhase;
     private OrderPopupUI popupInstance;
 
     private PhotoOrderService orderService;
@@ -74,6 +63,9 @@ public class CustomerController : MonoBehaviour, IInteractable
     private bool notifiedReady;
     private bool hasPhotoTaken;
     private bool listeningPhotoEvent;
+
+    private Coroutine enterFlowRoutine;
+    private Coroutine exitFlowRoutine;
 
     private static readonly string[] paymentMessages =
     {
@@ -156,7 +148,8 @@ public class CustomerController : MonoBehaviour, IInteractable
         Transform photoSpotPoint,
         Transform exitPointTransform,
         Transform outsidePointTransform,
-        Transform insidePointTransform)
+        Transform insidePointTransform
+    )
     {
         Debug.Log($"[CustomerController] {name} Init called. isClown: {isClown}");
 
@@ -168,7 +161,6 @@ public class CustomerController : MonoBehaviour, IInteractable
         insidePoint = insidePointTransform;
 
         state = CustomerState.WaitingDoorCheck;
-        gateMovePhase = GateMovePhase.None;
 
         if (isClown)
         {
@@ -178,7 +170,10 @@ public class CustomerController : MonoBehaviour, IInteractable
             Debug.Log($"[CustomerController] {name} is a Clown! Unified Event triggered on spawn.");
         }
 
-        StartCoroutine(FlowRoutine());
+        if (enterFlowRoutine != null)
+            StopCoroutine(enterFlowRoutine);
+
+        enterFlowRoutine = StartCoroutine(EnterFlowRoutine());
     }
 
     public void SetOrderService(PhotoOrderService service)
@@ -191,36 +186,91 @@ public class CustomerController : MonoBehaviour, IInteractable
         player = playerTransform;
     }
 
-    private IEnumerator FlowRoutine()
+    private IEnumerator EnterFlowRoutine()
     {
-        Debug.Log($"[CustomerController] {name} FlowRoutine started. Delay: {firstCheckDelay}");
         yield return new WaitForSeconds(firstCheckDelay);
 
-        if (standByPC != null && agent != null)
+        if (agent == null || standByPC == null || outsidePoint == null)
+            yield break;
+
+        EnsureAgentOnNavMesh();
+
+        state = CustomerState.WaitingDoorOpen;
+
+        while (IsMainDoorClosed())
+            yield return new WaitForSeconds(recheckInterval);
+
+        MoveTo(outsidePoint.position);
+        state = CustomerState.GoingToOutside;
+
+        while (state == CustomerState.GoingToOutside)
         {
-            if (!agent.isOnNavMesh)
+            if (ReachedDestination())
             {
-                Debug.LogWarning($"[CustomerController] {name} is not on NavMesh! Attempting to warp.");
-                agent.Warp(transform.position);
+                StopMovement();
+                state = CustomerState.WaitingOutsideDoorOpen;
+                break;
             }
 
-            BeginEnterFlow();
+            yield return null;
         }
-        else
+
+        while (state == CustomerState.WaitingOutsideDoorOpen && IsMainDoorClosed())
+            yield return new WaitForSeconds(recheckInterval);
+
+        if (state != CustomerState.WaitingOutsideDoorOpen)
+            yield break;
+
+        MoveTo(standByPC.position);
+        state = CustomerState.GoingToPC;
+    }
+
+    private IEnumerator ExitFlowRoutine()
+    {
+        if (agent == null || exitPoint == null || insidePoint == null)
+            yield break;
+
+        EnsureAgentOnNavMesh();
+
+        MoveTo(insidePoint.position);
+        state = CustomerState.GoingToInside;
+
+        while (state == CustomerState.GoingToInside)
         {
-            if (standByPC == null) Debug.LogError($"[CustomerController] {name} standByPC is NULL!");
-            if (agent == null) Debug.LogError($"[CustomerController] {name} NavMeshAgent is NULL!");
+            if (ReachedDestination())
+            {
+                StopMovement();
+                state = CustomerState.WaitingInsideDoorOpen;
+                break;
+            }
+
+            yield return null;
         }
+
+        while (state == CustomerState.WaitingInsideDoorOpen && IsMainDoorClosed())
+            yield return new WaitForSeconds(recheckInterval);
+
+        if (state != CustomerState.WaitingInsideDoorOpen)
+            yield break;
+
+        MoveTo(exitPoint.position);
+        state = CustomerState.GoingToExit;
     }
 
     private void Update()
     {
-        UpdateGateMovement();
-
-        if (state == CustomerState.GoingToPhotoSpot && ReachedDestination())
+        if (state == CustomerState.GoingToPC && ReachedDestination())
         {
-            state = CustomerState.WaitingShootDone;
             StopMovement();
+            state = CustomerState.WaitingPickupAtPC;
+
+            GenerateOrder();
+            SpawnPopupForOrder();
+        }
+        else if (state == CustomerState.GoingToPhotoSpot && ReachedDestination())
+        {
+            StopMovement();
+            state = CustomerState.WaitingShootDone;
 
             if (StudioManager.Instance != null)
                 StudioManager.Instance.SetCurrentCustomer(this);
@@ -231,248 +281,37 @@ public class CustomerController : MonoBehaviour, IInteractable
         }
         else if (state == CustomerState.ReturningToPC && ReachedDestination())
         {
-            state = CustomerState.WaitingPrintAtPC;
             StopMovement();
+            state = CustomerState.WaitingPrintAtPC;
 
             if (StudioManager.Instance != null)
                 StudioManager.Instance.UnlockPrinting();
+        }
+        else if (state == CustomerState.GoingToExit && ReachedDestination())
+        {
+            StopMovement();
+            FinishAndDestroy();
         }
 
         LookAtPlayer();
     }
 
-    private void UpdateGateMovement()
+    private void EnsureAgentOnNavMesh()
     {
-        if (state == CustomerState.GoingToPC)
+        if (agent != null && !agent.isOnNavMesh)
         {
-            UpdateEnterFlow();
-            return;
-        }
-
-        if (state == CustomerState.GoingToExit)
-        {
-            UpdateExitFlow();
+            agent.Warp(transform.position);
         }
     }
 
-    private void BeginEnterFlow()
-    {
-        state = CustomerState.GoingToPC;
-
-        if (IsMainDoorClosed() && outsidePoint != null)
-        {
-            MoveToOutsidePoint();
-            return;
-        }
-
-        gateMovePhase = GateMovePhase.EnteringDirectToPC;
-        MoveAgentTo(standByPC.position);
-    }
-
-    private void UpdateEnterFlow()
-    {
-        if (gateMovePhase == GateMovePhase.EnteringDirectToPC)
-        {
-            if (IsMainDoorClosed() && outsidePoint != null)
-            {
-                MoveToOutsidePoint();
-                return;
-            }
-
-            if (ReachedDestination())
-            {
-                ArriveAtPC();
-            }
-
-            return;
-        }
-
-        if (gateMovePhase == GateMovePhase.MovingToOutside)
-        {
-            if (!ReachedDestination())
-                return;
-
-            StopMovement();
-
-            if (IsMainDoorClosed())
-            {
-                gateMovePhase = GateMovePhase.WaitingOutsideDoorOpen;
-                state = CustomerState.WaitingDoorOpen;
-            }
-            else
-            {
-                StartMoveFromOutsideToPC();
-            }
-
-            return;
-        }
-
-        if (gateMovePhase == GateMovePhase.WaitingOutsideDoorOpen)
-        {
-            if (!IsMainDoorClosed())
-            {
-                StartMoveFromOutsideToPC();
-            }
-
-            return;
-        }
-
-        if (gateMovePhase == GateMovePhase.EnteringFromOutsideToPC)
-        {
-            if (ReachedDestination())
-            {
-                ArriveAtPC();
-            }
-        }
-    }
-
-    private void BeginExitFlow()
-    {
-        StopListeningPhotoCaptured();
-        NotifyReady(false);
-
-        if (StudioManager.Instance != null)
-            StudioManager.Instance.ClearCurrentCustomer();
-
-        if (popupInstance != null)
-            popupInstance.Hide();
-
-        if (exitPoint == null)
-        {
-            FinishAndDestroy();
-            return;
-        }
-
-        state = CustomerState.GoingToExit;
-
-        if (IsMainDoorClosed() && insidePoint != null)
-        {
-            MoveToInsidePoint();
-            return;
-        }
-
-        gateMovePhase = GateMovePhase.ExitingDirectToExit;
-        MoveAgentTo(exitPoint.position);
-    }
-
-    private void UpdateExitFlow()
-    {
-        if (gateMovePhase == GateMovePhase.ExitingDirectToExit)
-        {
-            if (IsMainDoorClosed() && insidePoint != null)
-            {
-                MoveToInsidePoint();
-                return;
-            }
-
-            if (ReachedDestination())
-            {
-                StopMovement();
-                FinishAndDestroy();
-            }
-
-            return;
-        }
-
-        if (gateMovePhase == GateMovePhase.MovingToInside)
-        {
-            if (!ReachedDestination())
-                return;
-
-            StopMovement();
-
-            if (IsMainDoorClosed())
-            {
-                gateMovePhase = GateMovePhase.WaitingInsideDoorOpen;
-                state = CustomerState.WaitingExitDoorOpen;
-            }
-            else
-            {
-                StartMoveFromInsideToExit();
-            }
-
-            return;
-        }
-
-        if (gateMovePhase == GateMovePhase.WaitingInsideDoorOpen)
-        {
-            if (!IsMainDoorClosed())
-            {
-                StartMoveFromInsideToExit();
-            }
-
-            return;
-        }
-
-        if (gateMovePhase == GateMovePhase.ExitingFromInsideToExit)
-        {
-            if (ReachedDestination())
-            {
-                StopMovement();
-                FinishAndDestroy();
-            }
-        }
-    }
-
-    private void MoveToOutsidePoint()
-    {
-        if (outsidePoint == null)
-        {
-            gateMovePhase = GateMovePhase.EnteringDirectToPC;
-            MoveAgentTo(standByPC.position);
-            return;
-        }
-
-        gateMovePhase = GateMovePhase.MovingToOutside;
-        state = CustomerState.GoingToPC;
-        MoveAgentTo(outsidePoint.position);
-    }
-
-    private void StartMoveFromOutsideToPC()
-    {
-        gateMovePhase = GateMovePhase.EnteringFromOutsideToPC;
-        state = CustomerState.GoingToPC;
-        MoveAgentTo(standByPC.position);
-    }
-
-    private void MoveToInsidePoint()
-    {
-        if (insidePoint == null)
-        {
-            gateMovePhase = GateMovePhase.ExitingDirectToExit;
-            MoveAgentTo(exitPoint.position);
-            return;
-        }
-
-        gateMovePhase = GateMovePhase.MovingToInside;
-        state = CustomerState.GoingToExit;
-        MoveAgentTo(insidePoint.position);
-    }
-
-    private void StartMoveFromInsideToExit()
-    {
-        gateMovePhase = GateMovePhase.ExitingFromInsideToExit;
-        state = CustomerState.GoingToExit;
-        MoveAgentTo(exitPoint.position);
-    }
-
-    private void ArriveAtPC()
-    {
-        state = CustomerState.WaitingPickupAtPC;
-        gateMovePhase = GateMovePhase.None;
-        StopMovement();
-
-        GenerateOrder();
-        SpawnPopupForOrder();
-    }
-
-    private void MoveAgentTo(Vector3 destination)
+    private void MoveTo(Vector3 target)
     {
         if (agent == null)
             return;
 
         agent.isStopped = false;
-        agent.SetDestination(destination);
+        agent.ResetPath();
+        agent.SetDestination(target);
 
         if (customerAnimator != null)
             customerAnimator.SetWalking(true);
@@ -571,8 +410,7 @@ public class CustomerController : MonoBehaviour, IInteractable
                 popupInstance.Hide();
 
             state = CustomerState.GoingToPhotoSpot;
-            gateMovePhase = GateMovePhase.None;
-            MoveAgentTo(photoSpot.position);
+            MoveTo(photoSpot.position);
 
             GameEventAPI.OnCustomerInvitedToStudio?.Invoke();
             return;
@@ -590,8 +428,7 @@ public class CustomerController : MonoBehaviour, IInteractable
                 StudioManager.Instance.LockPrinting();
 
             state = CustomerState.ReturningToPC;
-            gateMovePhase = GateMovePhase.None;
-            MoveAgentTo(standByPC.position);
+            MoveTo(standByPC.position);
         }
     }
 
@@ -700,13 +537,35 @@ public class CustomerController : MonoBehaviour, IInteractable
         BeginExitFlow();
     }
 
+    private void BeginExitFlow()
+    {
+        StopListeningPhotoCaptured();
+        NotifyReady(false);
+
+        if (StudioManager.Instance != null)
+            StudioManager.Instance.ClearCurrentCustomer();
+
+        if (popupInstance != null)
+            popupInstance.Hide();
+
+        if (exitPoint == null)
+        {
+            FinishAndDestroy();
+            return;
+        }
+
+        if (exitFlowRoutine != null)
+            StopCoroutine(exitFlowRoutine);
+
+        exitFlowRoutine = StartCoroutine(ExitFlowRoutine());
+    }
+
     private void FinishAndDestroy(bool triggerEvent = true)
     {
         if (state == CustomerState.Completed)
             return;
 
         state = CustomerState.Completed;
-        gateMovePhase = GateMovePhase.None;
 
         if (triggerEvent)
             GameEventAPI.OnCustomerCompleted?.Invoke();

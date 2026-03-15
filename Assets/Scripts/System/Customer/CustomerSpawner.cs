@@ -69,9 +69,9 @@ public class CustomerSpawner : MonoBehaviour
     [ContextMenu("Spawn Normal Customer")]
     public void SpawnNormalCustomer()
     {
-        if (normalCustomerPrefabs.Count == 0 || !spawnPoint || !standByPC || !photoSpot || !exitPoint)
+        if (normalCustomerPrefabs.Count == 0 || !spawnPoint || !standByPC || !photoSpot || !exitPoint || !outsidePoint || !insidePoint)
         {
-            Debug.LogError("[CustomerSpawner] Missing prefab list/spawnPoint/standByPC/photoSpot/exitPoint.");
+            Debug.LogError("[CustomerSpawner] Missing prefab list/spawnPoint/standByPC/photoSpot/exitPoint/outsidePoint/insidePoint.");
             return;
         }
 
@@ -95,6 +95,12 @@ public class CustomerSpawner : MonoBehaviour
         {
             Debug.LogWarning("[CustomerSpawner] ClownCustomerPrefab is null, spawning normal customer instead.");
             SpawnNormalCustomer();
+            return;
+        }
+
+        if (!spawnPoint || !standByPC || !photoSpot || !exitPoint || !outsidePoint || !insidePoint)
+        {
+            Debug.LogError("[CustomerSpawner] Missing spawnPoint/standByPC/photoSpot/exitPoint/outsidePoint/insidePoint.");
             return;
         }
 
