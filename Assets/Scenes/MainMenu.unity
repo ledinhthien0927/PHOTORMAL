@@ -497,7 +497,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   questPanel: {fileID: 1217682786}
-  loadingSceneName: Loading
 --- !u!1 &832766524
 GameObject:
   m_ObjectHideFlags: 0
@@ -585,8 +584,10 @@ GameObject:
   - component: {fileID: 868422818}
   - component: {fileID: 868422817}
   - component: {fileID: 868422816}
+  - component: {fileID: 868422820}
+  - component: {fileID: 868422819}
   m_Layer: 5
-  m_Name: ReStart (1)
+  m_Name: Continue
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -656,9 +657,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 544073612}
-        m_TargetAssemblyTypeName: PHOTORMAL.UI.MainMenuManager, Assembly-CSharp
-        m_MethodName: OnStartGameClicked
+      - m_Target: {fileID: 868422820}
+        m_TargetAssemblyTypeName: SceneChangeButtonFade, Assembly-CSharp
+        m_MethodName: ClickLoadScene
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -666,7 +667,7 @@ MonoBehaviour:
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
-          m_BoolArgument: 0
+          m_BoolArgument: 1
         m_CallState: 2
 --- !u!114 &868422817
 MonoBehaviour:
@@ -706,6 +707,34 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 868422814}
   m_CullTransparentMesh: 1
+--- !u!114 &868422819
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 868422814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0be19280f35aec44087121ead65a4771, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &868422820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 868422814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ead1d64f05b5414fa0d36f3ce74c179, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sceneToLoad: Night_01
+  fadeOverlay: {fileID: 1189474377}
+  fadeOutDuration: 0.6
+  disableButtonWhileLoading: 1
 --- !u!1 &961739749
 GameObject:
   m_ObjectHideFlags: 0
@@ -1562,9 +1591,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1991335998}
-        m_TargetAssemblyTypeName: SceneChangeButtonFade, Assembly-CSharp
-        m_MethodName: ClickLoadScene
+      - m_Target: {fileID: 544073612}
+        m_TargetAssemblyTypeName: MainMenuManager, Assembly-CSharp
+        m_MethodName: OnStartGameClicked
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
