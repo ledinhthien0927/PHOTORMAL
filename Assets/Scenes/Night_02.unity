@@ -4562,11 +4562,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3885c721f9c9f55428ba84cf718ed9fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  customerServiceTimeLimit: 15
+  customerServiceTimeLimit: 45
   backDoorGracePeriod: 10
   footstepGracePeriod: 10
   twinsGracePeriod: 10
-  clownGracePeriod: 10
+  clownGracePeriod: 30
   serviceCountdown: 0
   backDoorCountdown: 0
   footstepCountdown: 0

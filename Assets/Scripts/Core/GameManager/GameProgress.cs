@@ -114,4 +114,11 @@ public class GameProgress : MonoBehaviour
         ResetNightData();
         OnNightChanged?.Invoke(CurrentNight);
     }
+
+    public void SetNight(int night)
+    {
+        CurrentNight = night;
+        ResetNightData();
+        OnNightChanged?.Invoke(CurrentNight);
+    }
 }

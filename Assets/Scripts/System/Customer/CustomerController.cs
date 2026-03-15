@@ -110,6 +110,16 @@ public class CustomerController : MonoBehaviour, IInteractable
         Interact();
     }
 
+    private void OnEnable()
+    {
+        GameEventAPI.OnClownDisappeared += HandleClownDisappeared;
+    }
+
+    private void OnDisable()
+    {
+        GameEventAPI.OnClownDisappeared -= HandleClownDisappeared;
+    }
+
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -132,12 +142,24 @@ public class CustomerController : MonoBehaviour, IInteractable
         Transform exitPointTransform
     )
     {
+        Debug.Log($"[CustomerController] {name} Init called. isClown: {isClown}");
         standByPC = standByPcPoint;
         mainDoorBlocker = mainDoorBlockerCollider;
         photoSpot = photoSpotPoint;
         exitPoint = exitPointTransform;
 
         state = CustomerState.WaitingDoorCheck;
+
+        if (isClown)
+        {
+            // Unified Clown Logic: Trigger event immediately on spawn
+            // This starts the countdown and sounds
+            RuleContext.Instance.IsClownAppeared = true;
+            if (RuleManager.Instance != null) RuleManager.Instance.ResetClownTimer();
+            GameEventAPI.OnClownAppeared?.Invoke();
+            Debug.Log($"[CustomerController] {name} is a Clown! Unified Event triggered on spawn.");
+        }
+
         StartCoroutine(FlowRoutine());
     }
 
@@ -307,20 +329,6 @@ public class CustomerController : MonoBehaviour, IInteractable
         {
             if (popupInstance != null)
                 popupInstance.Hide();
-
-            if (isClown)
-            {
-                // Trigger Clown Event instead of starting session
-                if (EventManager.Instance != null)
-                    EventManager.Instance.TriggerEvent("Clown");
-
-                GameEventAPI.OnCustomerInvitedToStudio?.Invoke();
-                
-                // The clown as a customer disappears, but we don't trigger completion yet
-                // because the "Spooky" phase just started and will trigger its own completion.
-                FinishAndDestroy(false);
-                return;
-            }
 
             state = CustomerState.GoingToPhotoSpot;
             agent.isStopped = false;
@@ -574,5 +582,14 @@ public class CustomerController : MonoBehaviour, IInteractable
             return;
 
         Debug.Log($"{name} received printed photo directly.");
+    }
+
+    private void HandleClownDisappeared()
+    {
+        if (isClown)
+        {
+            Debug.Log($"[CustomerController] {name} (Clown) heard OnClownDisappeared. Vanishing!");
+            FinishAndDestroy();
+        }
     }
 }

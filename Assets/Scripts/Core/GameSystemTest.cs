@@ -29,13 +29,13 @@ public class GameSystemTest : MonoBehaviour
     private void Update()
     {
         // SYSTEM TRIGGERS (Environment Threats)
-        if (Input.GetKeyDown(KeyCode.F1)) RunTrigger("CustomerSpawn"); // Not strictly an event yet, but keeping for flow
+        if (Input.GetKeyDown(KeyCode.F1)) { if (Input.GetKey(KeyCode.LeftAlt)) ForceSpawnNormal(); else RunTrigger("CustomerSpawn"); } 
         if (Input.GetKeyDown(KeyCode.F2)) RunTrigger("FlickerLight");
         if (Input.GetKeyDown(KeyCode.F3)) RunTrigger("Twins");
         if (Input.GetKeyDown(KeyCode.F4)) ToggleBackDoor();
         if (Input.GetKeyDown(KeyCode.F5)) RunTrigger("Footstep");
         if (Input.GetKeyDown(KeyCode.F6)) RunTrigger("ShowWarningUI"); 
-        if (Input.GetKeyDown(KeyCode.F7)) RunTrigger("Clown");
+        if (Input.GetKeyDown(KeyCode.F7)) { if (Input.GetKey(KeyCode.LeftAlt)) ForceSpawnClown(); else RunTrigger("Clown"); }
         if (Input.GetKeyDown(KeyCode.F8)) RunTrigger("Delivery");
         
         // SYSTEM TOOLS
@@ -759,6 +759,24 @@ public class GameSystemTest : MonoBehaviour
     // ============================================================
     // F10: STATUS PANEL
     // ============================================================
+
+    private void ForceSpawnNormal()
+    {
+        Log("Force Spawning Normal Customer...");
+        if (CustomerQueueManager.Instance != null)
+            CustomerQueueManager.Instance.ForceSpawnNormal();
+        else
+            LogFail("CustomerQueueManager instance not found!");
+    }
+
+    private void ForceSpawnClown()
+    {
+        Log("Force Spawning Clown Customer...");
+        if (CustomerQueueManager.Instance != null)
+            CustomerQueueManager.Instance.ForceSpawnClown();
+        else
+            LogFail("CustomerQueueManager instance not found!");
+    }
 
     private void DumpStatus()
     {

@@ -111,13 +111,10 @@ public class EnvironmentEffectController : MonoBehaviour, IGameEvent
 
     private void HandleClownAppears()
     {
-        if (clownModel != null)
+        // We only play the appearance sound. The guest model is already in 3D space.
+        if (AudioManager.Instance != null)
         {
-            clownModel.SetActive(true);
-            if (AudioManager.Instance != null)
-            {
-                AudioManager.Instance.PlayClownAppear();
-            }
+            AudioManager.Instance.PlayClownAppear();
         }
     }
 

@@ -138,6 +138,18 @@ public class CustomerQueueManager : MonoBehaviour
         currentCustomersAlive++;
     }
 
+    /// <summary> Force spawn 1 clown customer immediately. </summary>
+    public void ForceSpawnClown()
+    {
+        if (customerSpawner == null)
+        {
+            Debug.LogWarning("[CustomerQueueManager] CustomerSpawner chưa được gán!");
+            return;
+        }
+        customerSpawner.SpawnClownCustomer();
+        currentCustomersAlive++;
+    }
+
 
     /// In danh sách queue ra Console để debug.
     public void DebugDumpQueue()
@@ -291,12 +303,10 @@ public class CustomerQueueManager : MonoBehaviour
                 break;
 
             case SpawnEntryType.ClownEvent:
-                Debug.Log("[CustomerQueueManager] Spawn: Clown (Customer Phase)");
-                currentCustomersAlive++; // Chặn queue cho đến khi Clown biến mất/Jumpscare
-                if (customerSpawner != null)
-                {
-                    customerSpawner.SpawnClownCustomer();
-                }
+                Debug.Log("[CustomerQueueManager] Spawn: Clown Event (Tuần tự)");
+                // ForceSpawnClown inside ClownEvent.Execute will increment currentCustomersAlive
+                if (EventManager.Instance != null)
+                    EventManager.Instance.TriggerEvent("Clown");
                 break;
 
             case SpawnEntryType.FootstepEvent:

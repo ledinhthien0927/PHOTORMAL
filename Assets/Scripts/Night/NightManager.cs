@@ -45,6 +45,10 @@ public class NightManager : MonoBehaviour
     {
         Debug.Log("Advancing to Next Night");
         GameProgress.Instance.NextNight();
+
+        // Save progress when successfully transitioning to next night
+        SaveSystem.SaveNight(GameProgress.Instance.CurrentNight);
+
         StartNight(GameProgress.Instance.CurrentNight);
     }
 }

@@ -80,6 +80,8 @@ public class RuleManager : MonoBehaviour
     public void ResetClownTimer()
     {
         clownPatienceTimer = 0f;
+        clownCountdown = clownGracePeriod;
+        Debug.Log("[RuleManager] Clown Timer Reset.");
     }
 
     public void SetupRules(int night)
@@ -367,6 +369,7 @@ public class RuleManager : MonoBehaviour
             clownCountdown = 0f;
         }
     }
+
 
     void BreakRule(RuleType rule)
     {
