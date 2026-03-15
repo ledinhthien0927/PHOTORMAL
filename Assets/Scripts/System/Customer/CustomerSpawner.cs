@@ -26,6 +26,7 @@ public class CustomerSpawner : MonoBehaviour
     public Transform twinsSpawnPoint;
     public GameObject clownPrefab;
     public Transform clownSpawnPoint;
+    public CustomerController clownCustomerPrefab;
 
     [Header("References")]
     public EnvironmentEffectController effectController;
@@ -93,6 +94,28 @@ public class CustomerSpawner : MonoBehaviour
         customer.Init(standByPC, mainDoorBlocker, photoSpot, exitPoint);
 
         // Inject scene references.
+        customer.SetOrderService(orderService);
+        customer.SetPlayer(player);
+    }
+
+    /// <summary> Spawn the clown as a customer phase. </summary>
+    public void SpawnClownCustomer()
+    {
+        if (clownCustomerPrefab == null)
+        {
+            Debug.LogWarning("[CustomerSpawner] ClownCustomerPrefab is null, spawning normal customer instead.");
+            SpawnNormalCustomer();
+            return;
+        }
+
+        CustomerController customer = Instantiate(
+            clownCustomerPrefab,
+            spawnPoint.position,
+            spawnPoint.rotation
+        );
+
+        customer.isClown = true;
+        customer.Init(standByPC, mainDoorBlocker, photoSpot, exitPoint);
         customer.SetOrderService(orderService);
         customer.SetPlayer(player);
     }

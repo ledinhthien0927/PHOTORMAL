@@ -58,6 +58,8 @@ GameObject:
   - component: {fileID: 3968300071191899106}
   - component: {fileID: -7455900207310517858}
   - component: {fileID: 2380693497141231343}
+  - component: {fileID: 4901159691790227627}
+  - component: {fileID: 3105489788402864577}
   m_Layer: 0
   m_Name: Customer1
   m_TagString: Customer
@@ -200,6 +202,42 @@ MonoBehaviour:
   lookRotateSpeed: 360
   inviteText: Invite to studio
   finishText: Finish session
+  deliverText: Give printed photo
+  isClown: 0
+--- !u!95 &4901159691790227627
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3678391686013438733}
+  m_Enabled: 1
+  m_Avatar: {fileID: 9000000, guid: 82e586ca618ce304885df8ccfb5c40d6, type: 3}
+  m_Controller: {fileID: 9100000, guid: 06d5ca2247daa594bbd4d389057fc15d, type: 2}
+  m_CullingMode: 1
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 1
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &3105489788402864577
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3678391686013438733}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca3d83b9add71214dba8979f58ba97d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1551654268103514844
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -272,6 +310,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: a3bb5db1fd0b1bc49b3f8277503a9a00, type: 2}
+    - target: {fileID: 5866666021909216657, guid: 82e586ca618ce304885df8ccfb5c40d6, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 06d5ca2247daa594bbd4d389057fc15d, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

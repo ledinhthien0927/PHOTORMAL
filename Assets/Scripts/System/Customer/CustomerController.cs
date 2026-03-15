@@ -38,6 +38,10 @@ public class CustomerController : MonoBehaviour, IInteractable
     [SerializeField] private string deliverText = "Give printed photo";
 
     private NavMeshAgent agent;
+    private CustomerAnimator customerAnimator;
+
+    [Header("Special Identity")]
+    public bool isClown = false;
 
     private Transform standByPC;
     private Transform photoSpot;
@@ -109,6 +113,10 @@ public class CustomerController : MonoBehaviour, IInteractable
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
+        if (agent == null) agent = GetComponentInChildren<NavMeshAgent>();
+        
+        customerAnimator = GetComponent<CustomerAnimator>();
+        if (customerAnimator == null) customerAnimator = GetComponentInChildren<CustomerAnimator>();
     }
 
     private void OnDestroy()
@@ -145,18 +153,38 @@ public class CustomerController : MonoBehaviour, IInteractable
 
     private IEnumerator FlowRoutine()
     {
+        Debug.Log($"[CustomerController] {name} FlowRoutine started. Delay: {firstCheckDelay}");
         yield return new WaitForSeconds(firstCheckDelay);
 
         state = CustomerState.WaitingDoorOpen;
+        Debug.Log($"[CustomerController] {name} state: WaitingDoorOpen. Checking door block...");
 
         while (IsMainDoorClosed())
             yield return new WaitForSeconds(recheckInterval);
 
-        if (standByPC != null)
+        Debug.Log($"[CustomerController] {name} door is open! Preparing to move to PC.");
+
+        if (standByPC != null && agent != null)
         {
             state = CustomerState.GoingToPC;
+            
+            // Ensure agent is on NavMesh
+            if (!agent.isOnNavMesh)
+            {
+                Debug.LogWarning($"[CustomerController] {name} is not on NavMesh! Attempting to warp.");
+                agent.Warp(transform.position);
+            }
+
             agent.isStopped = false;
             agent.SetDestination(standByPC.position);
+            if (customerAnimator != null) customerAnimator.SetWalking(true);
+            
+            Debug.Log($"[CustomerController] {name} destination set to {standByPC.position}. Agent speed: {agent.speed}");
+        }
+        else
+        {
+            if (standByPC == null) Debug.LogError($"[CustomerController] {name} standByPC is NULL!");
+            if (agent == null) Debug.LogError($"[CustomerController] {name} NavMeshAgent is NULL!");
         }
     }
 
@@ -165,6 +193,7 @@ public class CustomerController : MonoBehaviour, IInteractable
         if (state == CustomerState.GoingToPC && ReachedDestination())
         {
             state = CustomerState.WaitingPickupAtPC;
+            if (customerAnimator != null) customerAnimator.SetWalking(false);
 
             GenerateOrder();
             SpawnPopupForOrder();
@@ -172,6 +201,7 @@ public class CustomerController : MonoBehaviour, IInteractable
         else if (state == CustomerState.GoingToPhotoSpot && ReachedDestination())
         {
             state = CustomerState.WaitingShootDone;
+            if (customerAnimator != null) customerAnimator.SetWalking(false);
 
             if (StudioManager.Instance != null)
                 StudioManager.Instance.SetCurrentCustomer(this);
@@ -184,12 +214,14 @@ public class CustomerController : MonoBehaviour, IInteractable
         else if (state == CustomerState.ReturningToPC && ReachedDestination())
         {
             state = CustomerState.WaitingPrintAtPC;
+            if (customerAnimator != null) customerAnimator.SetWalking(false);
 
             if (StudioManager.Instance != null)
                 StudioManager.Instance.UnlockPrinting();
         }
         else if (state == CustomerState.GoingToExit && ReachedDestination())
         {
+            if (customerAnimator != null) customerAnimator.SetWalking(false);
             FinishAndDestroy();
         }
 
@@ -276,9 +308,24 @@ public class CustomerController : MonoBehaviour, IInteractable
             if (popupInstance != null)
                 popupInstance.Hide();
 
+            if (isClown)
+            {
+                // Trigger Clown Event instead of starting session
+                if (EventManager.Instance != null)
+                    EventManager.Instance.TriggerEvent("Clown");
+
+                GameEventAPI.OnCustomerInvitedToStudio?.Invoke();
+                
+                // The clown as a customer disappears, but we don't trigger completion yet
+                // because the "Spooky" phase just started and will trigger its own completion.
+                FinishAndDestroy(false);
+                return;
+            }
+
             state = CustomerState.GoingToPhotoSpot;
             agent.isStopped = false;
             agent.SetDestination(photoSpot.position);
+            if (customerAnimator != null) customerAnimator.SetWalking(true);
 
             GameEventAPI.OnCustomerInvitedToStudio?.Invoke();
             return;
@@ -298,6 +345,7 @@ public class CustomerController : MonoBehaviour, IInteractable
             state = CustomerState.ReturningToPC;
             agent.isStopped = false;
             agent.SetDestination(standByPC.position);
+            if (customerAnimator != null) customerAnimator.SetWalking(true);
         }
     }
 
@@ -446,16 +494,19 @@ public class CustomerController : MonoBehaviour, IInteractable
         state = CustomerState.GoingToExit;
         agent.isStopped = false;
         agent.SetDestination(exitPoint.position);
+        if (customerAnimator != null) customerAnimator.SetWalking(true);
     }
 
-    private void FinishAndDestroy()
+    private void FinishAndDestroy(bool triggerEvent = true)
     {
         if (state == CustomerState.Completed)
             return;
 
         state = CustomerState.Completed;
 
-        GameEventAPI.OnCustomerCompleted?.Invoke();
+        if (triggerEvent)
+            GameEventAPI.OnCustomerCompleted?.Invoke();
+
         Destroy(gameObject);
     }
 

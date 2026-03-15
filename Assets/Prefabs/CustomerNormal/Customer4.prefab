@@ -45,6 +45,8 @@ GameObject:
   - component: {fileID: 3968300071191899106}
   - component: {fileID: -7455900207310517858}
   - component: {fileID: 2380693497141231343}
+  - component: {fileID: 8793414435595345303}
+  - component: {fileID: -3051417852231722730}
   m_Layer: 0
   m_Name: Customer4
   m_TagString: Customer
@@ -187,6 +189,42 @@ MonoBehaviour:
   lookRotateSpeed: 360
   inviteText: Invite to studio
   finishText: Finish session
+  deliverText: Give printed photo
+  isClown: 0
+--- !u!95 &8793414435595345303
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3678391686013438733}
+  m_Enabled: 1
+  m_Avatar: {fileID: 9000000, guid: b1b1e6e176f61394198d9e4bd098987c, type: 3}
+  m_Controller: {fileID: 9100000, guid: c4d7adb0cc2d5bd4290d14d19cf35395, type: 2}
+  m_CullingMode: 1
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 1
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &-3051417852231722730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3678391686013438733}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca3d83b9add71214dba8979f58ba97d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &3239395760296946501
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -258,6 +296,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: b1b1e6e176f61394198d9e4bd098987c, type: 3}
       propertyPath: m_Name
       value: anim_walk_customer04.fbx
+      objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: b1b1e6e176f61394198d9e4bd098987c, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

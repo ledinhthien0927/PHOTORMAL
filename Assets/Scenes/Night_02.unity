@@ -3759,6 +3759,7 @@ MonoBehaviour:
   twinsSpawnPoint: {fileID: 697472796}
   clownPrefab: {fileID: 3678391686013438733, guid: 85207a0ca7949a146929629f85263755, type: 3}
   clownSpawnPoint: {fileID: 629604860}
+  clownCustomerPrefab: {fileID: 2380693497141231343, guid: 85207a0ca7949a146929629f85263755, type: 3}
   effectController: {fileID: 660994247}
 --- !u!4 &443128048
 Transform:

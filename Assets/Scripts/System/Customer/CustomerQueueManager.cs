@@ -291,10 +291,12 @@ public class CustomerQueueManager : MonoBehaviour
                 break;
 
             case SpawnEntryType.ClownEvent:
-                Debug.Log("[CustomerQueueManager] Spawn: Clown Event (Tuần tự)");
+                Debug.Log("[CustomerQueueManager] Spawn: Clown (Customer Phase)");
                 currentCustomersAlive++; // Chặn queue cho đến khi Clown biến mất/Jumpscare
-                if (EventManager.Instance != null)
-                    EventManager.Instance.TriggerEvent("Clown");
+                if (customerSpawner != null)
+                {
+                    customerSpawner.SpawnClownCustomer();
+                }
                 break;
 
             case SpawnEntryType.FootstepEvent:

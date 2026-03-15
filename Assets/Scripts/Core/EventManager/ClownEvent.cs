@@ -13,7 +13,7 @@ public class ClownEvent : MonoBehaviour, IGameEvent
             if (RuleManager.Instance != null)
                 RuleManager.Instance.ResetClownTimer();
 
-            Debug.Log("Sự kiện: Tên hề đứng ở cửa sau! (Mở cửa trong x giây)");
+            Debug.Log("Sự kiện: Tên hề đứng ở cửa sau! (Mở cửa trong 10 giây)");
             
             // Gọi ra API hệ thống để báo cho Coder B Spawn model Thằng hề ngoài cửa, phát âm thanh
             GameEventAPI.OnClownAppeared?.Invoke();
