@@ -7509,7 +7509,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 35dcb9363abb0e740a3c8bb0fef9be48, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 067949af2c7fb5849977ec1296be2492, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -7866,7 +7866,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e49e4bcacf20cf34c9297bf1b38aac4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  panelToMove: {fileID: 1290602105}
+  panelToMove: {fileID: 1174085525}
   moveUpY: 250
 --- !u!1 &1184376553
 GameObject:
@@ -8589,7 +8589,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1282347479
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9220,6 +9220,8 @@ MonoBehaviour:
   minNormalCustomersBeforeEvent: 2
   twinsChancePerSlot: 0.2
   clownChancePerSlot: 0.15
+  footstepChancePerSlot: 0.15
+  flickerChancePerSlot: 0.15
 --- !u!1 &1406271588
 GameObject:
   m_ObjectHideFlags: 0

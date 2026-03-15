@@ -7866,7 +7866,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e49e4bcacf20cf34c9297bf1b38aac4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  panelToMove: {fileID: 1290602105}
+  panelToMove: {fileID: 1174085525}
   moveUpY: 250
 --- !u!1 &1184376553
 GameObject:
@@ -9220,6 +9220,8 @@ MonoBehaviour:
   minNormalCustomersBeforeEvent: 2
   twinsChancePerSlot: 0.2
   clownChancePerSlot: 0.15
+  footstepChancePerSlot: 0.15
+  flickerChancePerSlot: 0.15
 --- !u!1 &1406271588
 GameObject:
   m_ObjectHideFlags: 0

@@ -56,6 +56,18 @@ public class CustomerController : MonoBehaviour, IInteractable
     private bool listeningPhotoEvent;
     private bool waitingForExitDoorRoutine;
 
+    private static readonly string[] paymentMessages =
+{
+    "Perfect! Here is your payment:",
+    "Great job! Here's your payment:",
+    "Looks amazing! Your payment:",
+    "Excellent work! You earned:",
+    "Exactly what I wanted! Here you go:",
+    "Fantastic print! Your reward:",
+    "That's perfect! Here's your money:",
+    "Nice work! Payment received:"
+};
+
     public string Prompt
     {
         get
@@ -340,12 +352,12 @@ public class CustomerController : MonoBehaviour, IInteractable
             StudioManager.Instance.ClearCurrentPrintPhotoData();
 
         printedPhoto.Consume();
+        string message = paymentMessages[Random.Range(0, paymentMessages.Length)];
 
         PlayerMessageUI.Instance?.ShowMessage(
-            "Thank you! This is exactly what I wanted.",
+            $"{message} +${reward}",
             3f
         );
-
         BeginExitFlow();
     }
 
