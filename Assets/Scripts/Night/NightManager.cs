@@ -25,14 +25,19 @@ public class NightManager : MonoBehaviour
             CustomerQueueManager.Instance.BuildQueueForNight(night);
     }
 
-    public void CheckTarget()
+    public bool IsTargetMet()
     {
         int night = GameProgress.Instance.CurrentNight;
 
         int index = Mathf.Clamp(night - 1, 0, targets.Length - 1);
         int target = targets[index];
 
-        if (GameProgress.Instance.CurrentMoney >= target)
+        return GameProgress.Instance.CurrentMoney >= target;
+    }
+
+    public void CheckTarget()
+    {
+        if (IsTargetMet())
         {
             if (PopupManager.Instance != null)
                 PopupManager.Instance.ShowWinNight();

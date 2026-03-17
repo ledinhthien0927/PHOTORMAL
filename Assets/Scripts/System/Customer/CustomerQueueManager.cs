@@ -53,19 +53,21 @@ public class CustomerQueueManager : MonoBehaviour
     // INTERNAL STATE
     // ==========================================
 
-    public enum SpawnEntryType { Normal, TwinsEvent, ClownEvent, FootstepEvent, FlickerEvent }
+    public enum SpawnEntryType { Normal, TwinsEvent, ClownEvent, FootstepEvent }
 
     [System.Serializable]
     public class SpawnEntry
     {
         public SpawnEntryType Type;
+        public bool WillFlicker; // Mới: Cờ đánh dấu ông khách này có bị chớp đèn không
 
-        public SpawnEntry(SpawnEntryType type)
+        public SpawnEntry(SpawnEntryType type, bool willFlicker = false)
         {
             Type = type;
+            WillFlicker = willFlicker;
         }
 
-        public override string ToString() => Type.ToString();
+        public override string ToString() => $"{Type} (Flicker: {WillFlicker})";
     }
 
     private Queue<SpawnEntry> spawnQueue = new Queue<SpawnEntry>();
@@ -87,7 +89,6 @@ public class CustomerQueueManager : MonoBehaviour
         
         // Theo dõi sự kiện kết thúc để giải phóng hàng đợi
         GameEventAPI.OnTwinsPresenceChanged += HandleTwinsEnd;
-        GameEventAPI.OnStudioLightFlicker += HandleFlickerEnd;
         GameEventAPI.OnFootstepToggled += HandleFootstepEnd;
     }
 
@@ -96,7 +97,6 @@ public class CustomerQueueManager : MonoBehaviour
         GameEventAPI.OnCustomerCompleted -= OnCustomerCompleted;
 
         GameEventAPI.OnTwinsPresenceChanged -= HandleTwinsEnd;
-        GameEventAPI.OnStudioLightFlicker -= HandleFlickerEnd;
         GameEventAPI.OnFootstepToggled -= HandleFootstepEnd;
     }
 
@@ -123,14 +123,14 @@ public class CustomerQueueManager : MonoBehaviour
     }
 
     /// Force spawn 1 khách bình thường ngay, dùng cho Test.
-    public void ForceSpawnNormal()
+    public void ForceSpawnNormal(bool willFlicker = false)
     {
         if (customerSpawner == null)
         {
             Debug.LogWarning("[CustomerQueueManager] CustomerSpawner chưa được gán!");
             return;
         }
-        customerSpawner.SpawnNormalCustomer();
+        customerSpawner.SpawnNormalCustomer(willFlicker);
         currentCustomersAlive++;
     }
 
@@ -167,8 +167,8 @@ public class CustomerQueueManager : MonoBehaviour
         int totalSlots = baseCustomerCountPerNight + (night - 1) * customerCountIncreasePerNight;
         List<SpawnEntry> entries = new List<SpawnEntry>();
 
-        // 1. Luôn bảo đảm Customer đầu tiên không có Event
-        entries.Add(new SpawnEntry(SpawnEntryType.Normal));
+        // 1. Luôn bảo đảm Customer đầu tiên không có Event kèm theo
+        entries.Add(new SpawnEntry(SpawnEntryType.Normal, false));
 
         bool twinsAdded = false;
         bool clownAdded = false;
@@ -202,16 +202,16 @@ public class CustomerQueueManager : MonoBehaviour
                 continue;
             }
 
-            // --- FLICKER ---
+            // --- NORMAL CUSTOMER ---
+            // Nếu không trúng Event chắn queue nào trên kia, thì spawn Customer.
+            // Customer này có thể mang theo cờ FlickerLight.
+            bool isFlickerAttached = false;
             if (roll < (currentChance += flickerChancePerSlot))
             {
-                entries.Add(new SpawnEntry(SpawnEntryType.FlickerEvent));
-                continue;
+                isFlickerAttached = true;
             }
-
-            // --- NORMAL CUSTOMER ---
-            // Nếu không trúng Event nào, thì sẽ spawn Customer bình thường
-            entries.Add(new SpawnEntry(SpawnEntryType.Normal));
+            
+            entries.Add(new SpawnEntry(SpawnEntryType.Normal, isFlickerAttached));
         }
 
         // --- BẢO ĐẢM TỐI THIỂU (Guarantees) ---
@@ -244,20 +244,40 @@ public class CustomerQueueManager : MonoBehaviour
         isProcessing = true;
         yield return new WaitForSeconds(initialSpawnDelay);
 
-        while (spawnQueue.Count > 0)
+        while (true)
         {
             // Chờ đến khi không còn khách nào đang active
             yield return new WaitUntil(() => currentCustomersAlive <= 0);
 
-            SpawnEntry entry = spawnQueue.Dequeue();
-            ProcessEntry(entry);
+            // Kiểm tra xem đã đủ tiền chưa? Nếu đủ rồi thì dừng spawn
+            if (NightManager.Instance != null && NightManager.Instance.IsTargetMet())
+            {
+                Debug.Log("[CustomerQueueManager] Goal reached. Stopping spawns for tonight.");
+                break;
+            }
 
-            // Chờ một chút sau khi spawn trước khi kiểm tra tiếp
-            yield return new WaitForSeconds(delayBetweenCustomers);
+            // Nếu hết queue mà vẫn chưa đủ tiền -> Rebuild queue mới
+            if (spawnQueue.Count == 0)
+            {
+                Debug.Log("[CustomerQueueManager] Queue empty but target not met. Rebuilding queue...");
+                int night = GameProgress.Instance.CurrentNight;
+                List<SpawnEntry> entries = BuildEntryList(night);
+                foreach (var e in entries)
+                    spawnQueue.Enqueue(e);
+            }
+
+            if (spawnQueue.Count > 0)
+            {
+                SpawnEntry entry = spawnQueue.Dequeue();
+                ProcessEntry(entry);
+
+                // Chờ một chút sau khi spawn trước khi kiểm tra tiếp
+                yield return new WaitForSeconds(delayBetweenCustomers);
+            }
         }
 
         isProcessing = false;
-        Debug.Log("[CustomerQueueManager] Hết queue đêm nay.");
+        Debug.Log("[CustomerQueueManager] Hết queue đêm nay (Mục tiêu đã đạt).");
     }
 
     private void ProcessEntry(SpawnEntry entry)
@@ -265,10 +285,10 @@ public class CustomerQueueManager : MonoBehaviour
         switch (entry.Type)
         {
             case SpawnEntryType.Normal:
-                Debug.Log("[CustomerQueueManager] Spawn: Normal Customer");
+                Debug.Log($"[CustomerQueueManager] Spawn: Normal Customer (WillFlicker: {entry.WillFlicker})");
                 if (customerSpawner != null)
                 {
-                    customerSpawner.SpawnNormalCustomer();
+                    customerSpawner.SpawnNormalCustomer(entry.WillFlicker);
                     currentCustomersAlive++;
                 }
                 break;
@@ -293,13 +313,6 @@ public class CustomerQueueManager : MonoBehaviour
                 if (EventManager.Instance != null)
                     EventManager.Instance.TriggerEvent("Footstep");
                 break;
-
-            case SpawnEntryType.FlickerEvent:
-                Debug.Log("[CustomerQueueManager] Spawn: Flicker Event (Tuần tự)");
-                currentCustomersAlive++; // Chặn queue cho đến khi hết nháy đèn
-                if (EventManager.Instance != null)
-                    EventManager.Instance.TriggerEvent("FlickerLight");
-                break;
         }
     }
 
@@ -317,11 +330,6 @@ public class CustomerQueueManager : MonoBehaviour
     private void HandleTwinsEnd(bool isPresent)
     {
         if (!isPresent) OnEventEntityCompleted();
-    }
-
-    private void HandleFlickerEnd(bool isFlickering)
-    {
-        if (!isFlickering) OnEventEntityCompleted();
     }
 
     private void HandleFootstepEnd(bool isPlaying)

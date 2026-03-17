@@ -118,6 +118,10 @@ public sealed class StudioManager : MonoBehaviour
             return false;
 
         lastShotTime = Time.time;
+        
+        // Báo cho RuleManager biết người chơi vừa mới bấm nút chụp ảnh
+        // (để kiểm tra xem có đang nháy đèn hay không)
+        GameEventAPI.OnPlayerShootPhoto?.Invoke();
 
         cameraController.CapturePhoto(texture =>
         {
