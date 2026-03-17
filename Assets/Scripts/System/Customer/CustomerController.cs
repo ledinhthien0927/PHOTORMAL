@@ -483,6 +483,8 @@ public class CustomerController : MonoBehaviour, IInteractable
                 "You printed the wrong order. Please throw it in the trash.",
                 3f
             );
+
+            ShowOrderPopupAgain();
             return;
         }
 
@@ -672,5 +674,27 @@ public class CustomerController : MonoBehaviour, IInteractable
             Debug.Log($"[CustomerController] {name} (Clown) heard OnClownDisappeared. Vanishing!");
             FinishAndDestroy();
         }
+    }
+
+    private void ShowOrderPopupAgain()
+    {
+        if (popupPrefab == null || popupAnchor == null)
+            return;
+
+        
+        if (currentOrder.quantity <= 0)
+            return;
+
+        if (popupInstance == null)
+        {
+            popupInstance = Instantiate(
+                popupPrefab,
+                popupAnchor.position,
+                Quaternion.identity,
+                popupAnchor
+            );
+        }
+
+        popupInstance.Show(currentOrder, null);
     }
 }
