@@ -206,16 +206,15 @@ public sealed class PCCanvasUI : MonoBehaviour
         if (printData == null)
             return;
 
+        if (string.IsNullOrEmpty(value))
+            return;
+
         if (!int.TryParse(value, out int copyCount))
-            copyCount = 1;
+            return;
 
         copyCount = Mathf.Clamp(copyCount, 1, 99);
         printData.CopyCount = copyCount;
-
-        if (copyInput != null && copyInput.text != copyCount.ToString())
-            copyInput.SetTextWithoutNotify(copyCount.ToString());
     }
-
     private void OnPrintClicked()
     {
         if (StudioManager.Instance == null)
