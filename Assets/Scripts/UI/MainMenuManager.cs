@@ -24,14 +24,26 @@ public class MainMenuManager : MonoBehaviour
     public void OnStartGameClicked()
     {
         Debug.Log("[MainMenuManager] Start Game Clicked!");
-        if (questPanel != null)
+
+        // If played before, show quest panel. If first time, skip directly to restart.
+        if (PlayerPrefs.GetInt("PlayedBefore", 0) == 1)
         {
-            questPanel.SetActive(true);
-            Debug.Log("[MainMenuManager] questPanel set to ACTIVE.");
+            if (questPanel != null)
+            {
+                questPanel.SetActive(true);
+                Debug.Log("[MainMenuManager] questPanel set to ACTIVE.");
+            }
+            else
+            {
+                Debug.LogWarning("[MainMenuManager] Cannot show Quest Panel: reference is missing!");
+            }
         }
         else
         {
-            Debug.LogWarning("[MainMenuManager] Cannot show Quest Panel: reference is missing!");
+            Debug.Log("[MainMenuManager] First time playing, skipping Quest Panel.");
+            PlayerPrefs.SetInt("PlayedBefore", 1);
+            PlayerPrefs.Save();
+            OnRestartClicked();
         }
     }
 
@@ -69,5 +81,13 @@ public class MainMenuManager : MonoBehaviour
         string nightSceneName = $"Night_{night:D2}";
         Debug.Log($"[MainMenuManager] Loading scene: {nightSceneName}");
         SceneManager.LoadScene(nightSceneName);
+    }
+
+    [ContextMenu("Reset Played Status")]
+    public void ResetPlayedStatus()
+    {
+        PlayerPrefs.DeleteKey("PlayedBefore");
+        PlayerPrefs.Save();
+        Debug.Log("[MainMenuManager] Played status reset. Next launch will skip Quest Panel.");
     }
 }

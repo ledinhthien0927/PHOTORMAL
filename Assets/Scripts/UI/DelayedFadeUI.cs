@@ -14,6 +14,7 @@ public class DelayedFadeUI : MonoBehaviour
 
     private CanvasGroup canvasGroup;
     private TMP_Text textMesh;
+    private bool hasShownInThisScene = false; // Biến kiểm tra chỉ hiện 1 lần trong Scene này
 
     private void Awake()
     {
@@ -30,15 +31,22 @@ public class DelayedFadeUI : MonoBehaviour
 
     private void OnEnable()
     {
+        // Kiểm tra nếu đã hiện rồi thì không chạy lại (kể cả khi tắt/mở lại GameObject)
+        if (hasShownInThisScene)
+        {
+            canvasGroup.alpha = 0f;
+            return;
+        }
+
         StartCoroutine(DelayedFadeSequence());
     }
 
     private IEnumerator DelayedFadeSequence()
     {
-        // Initial reset
+        hasShownInThisScene = true; // Đánh dấu đã bắt đầu hiện
         canvasGroup.alpha = 0f;
 
-        // 1. Wait for delay
+        // 1. Chờ delay sau khi load scene
         yield return new WaitForSeconds(delaySeconds);
 
         // 2. Fade in
@@ -51,7 +59,7 @@ public class DelayedFadeUI : MonoBehaviour
         }
         canvasGroup.alpha = 1f;
 
-        // 3. Wait while visible
+        // 3. Giữ hiển thị
         yield return new WaitForSeconds(visibleDuration);
 
         // 4. Fade out
@@ -63,5 +71,7 @@ public class DelayedFadeUI : MonoBehaviour
             yield return null;
         }
         canvasGroup.alpha = 0f;
+
+        Debug.Log("[DelayedFadeUI] Hiệu ứng kết thúc và sẽ không lặp lại trong Scene này.");
     }
 }

@@ -163,9 +163,6 @@ public class RuleManager : MonoBehaviour
              // Đúng rule: đã tắt đèn -> Cặp song sinh biến mất
              RuleContext.Instance.HasTwinsAppeared = false;
              
-             // Kích hoạt API hệ thống cho Coder B xử lý hiệu ứng biến mất
-             GameEventAPI.OnTwinsPresenceChanged?.Invoke(false);
-             
              // EventManager.Instance.TriggerEvent("DespawnTwins");
              Debug.Log("Đã tắt đèn, cặp song sinh biến mất.");
         }
@@ -298,7 +295,6 @@ public class RuleManager : MonoBehaviour
                 
                 // Sau khi phạt, ép cặp sinh đôi biến mất
                 RuleContext.Instance.HasTwinsAppeared = false;
-                GameEventAPI.OnTwinsPresenceChanged?.Invoke(false);
                 
                 twinsViolationTimer = 0f;
                 twinsCountdown = 0f;

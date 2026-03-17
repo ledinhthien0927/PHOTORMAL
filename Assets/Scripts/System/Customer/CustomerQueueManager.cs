@@ -87,8 +87,6 @@ public class CustomerQueueManager : MonoBehaviour
         
         // Theo dõi sự kiện kết thúc để giải phóng hàng đợi
         GameEventAPI.OnTwinsPresenceChanged += HandleTwinsEnd;
-        GameEventAPI.OnClownDisappeared += OnEventEntityCompleted;
-        GameEventAPI.OnClownJumpscare += OnEventEntityCompleted;
         GameEventAPI.OnStudioLightFlicker += HandleFlickerEnd;
         GameEventAPI.OnFootstepToggled += HandleFootstepEnd;
     }
@@ -98,8 +96,6 @@ public class CustomerQueueManager : MonoBehaviour
         GameEventAPI.OnCustomerCompleted -= OnCustomerCompleted;
 
         GameEventAPI.OnTwinsPresenceChanged -= HandleTwinsEnd;
-        GameEventAPI.OnClownDisappeared -= OnEventEntityCompleted;
-        GameEventAPI.OnClownJumpscare -= OnEventEntityCompleted;
         GameEventAPI.OnStudioLightFlicker -= HandleFlickerEnd;
         GameEventAPI.OnFootstepToggled -= HandleFootstepEnd;
     }
@@ -169,89 +165,71 @@ public class CustomerQueueManager : MonoBehaviour
     private List<SpawnEntry> BuildEntryList(int night)
     {
         int totalSlots = baseCustomerCountPerNight + (night - 1) * customerCountIncreasePerNight;
-
-        // Bắt đầu toàn bộ là Normal
         List<SpawnEntry> entries = new List<SpawnEntry>();
-        for (int i = 0; i < totalSlots; i++)
-            entries.Add(new SpawnEntry(SpawnEntryType.Normal));
 
-        // Đảm bảo sự kiện chỉ spawn sau vài khách đầu (vd: minNormalCustomersBeforeEvent = 2)
-        int startIndex = Mathf.Clamp(minNormalCustomersBeforeEvent, 0, totalSlots - 1);
+        // 1. Luôn bảo đảm Customer đầu tiên không có Event
+        entries.Add(new SpawnEntry(SpawnEntryType.Normal));
 
-        // --- TWINS ---
-        bool twinsGuaranteed = false;
-        for (int i = startIndex; i < entries.Count; i++)
+        bool twinsAdded = false;
+        bool clownAdded = false;
+
+        // 2. Từ slot thứ 2 trở đi, Random Khách HOẶC Event
+        for (int i = 1; i < totalSlots; i++)
         {
-            if (entries[i].Type != SpawnEntryType.Normal) continue;
-            if (Random.value < twinsChancePerSlot)
-            {
-                entries[i] = new SpawnEntry(SpawnEntryType.TwinsEvent);
-                twinsGuaranteed = true;
-            }
-        }
-        // Guarantee ít nhất 1 lần Twins: chèn vào nửa sau nếu chưa có (nhưng vẫn phải >= startIndex)
-        if (!twinsGuaranteed && entries.Count > 0)
-        {
-            int guaranteedIndex = Mathf.Max(startIndex, Random.Range(entries.Count / 2, entries.Count));
-            // Ưu tiên chọn slot Normal
-            for (int i = guaranteedIndex; i < entries.Count; i++)
-            {
-                if (entries[i].Type == SpawnEntryType.Normal)
-                {
-                    entries[i] = new SpawnEntry(SpawnEntryType.TwinsEvent);
-                    break;
-                }
-            }
-        }
-
-        // --- CLOWN (only Night 3+) ---
-        if (night >= 3)
-        {
-            bool clownGuaranteed = false;
-            for (int i = startIndex; i < entries.Count; i++)
-            {
-                if (entries[i].Type != SpawnEntryType.Normal) continue;
-                if (Random.value < clownChancePerSlot)
-                {
-                    entries[i] = new SpawnEntry(SpawnEntryType.ClownEvent);
-                    clownGuaranteed = true;
-                }
-            }
-            // Guarantee ít nhất 1 lần Clown: chèn cuối nếu chưa có
-            if (!clownGuaranteed && entries.Count > 0)
-            {
-                // Tìm slot Normal ở nửa sau để insert Clown
-                int startSearch = entries.Count / 2;
-                bool inserted = false;
-                for (int i = entries.Count - 1; i >= startSearch; i--)
-                {
-                    if (entries[i].Type == SpawnEntryType.Normal)
-                    {
-                        entries[i] = new SpawnEntry(SpawnEntryType.ClownEvent);
-                        inserted = true;
-                        break;
-                    }
-                }
-                // Nếu không tìm được slot Normal ở nửa sau, append thêm vào cuối
-                if (!inserted)
-                    entries.Add(new SpawnEntry(SpawnEntryType.ClownEvent));
-            }
-        }
-
-        // --- FOOTSTEP & FLICKER ---
-        for (int i = startIndex; i < entries.Count; i++)
-        {
-            if (entries[i].Type != SpawnEntryType.Normal) continue;
-
             float roll = Random.value;
-            if (roll < footstepChancePerSlot)
+            float currentChance = 0f;
+            
+            // --- TWINS ---
+            if (roll < (currentChance += twinsChancePerSlot))
             {
-                entries[i] = new SpawnEntry(SpawnEntryType.FootstepEvent);
+                entries.Add(new SpawnEntry(SpawnEntryType.TwinsEvent));
+                twinsAdded = true;
+                continue;
             }
-            else if (roll < footstepChancePerSlot + flickerChancePerSlot)
+            
+            // --- CLOWN (Only Night 3+) ---
+            if (night >= 3 && roll < (currentChance += clownChancePerSlot))
             {
-                entries[i] = new SpawnEntry(SpawnEntryType.FlickerEvent);
+                entries.Add(new SpawnEntry(SpawnEntryType.ClownEvent));
+                clownAdded = true;
+                continue;
             }
+            
+            // --- FOOTSTEP ---
+            if (roll < (currentChance += footstepChancePerSlot))
+            {
+                entries.Add(new SpawnEntry(SpawnEntryType.FootstepEvent));
+                continue;
+            }
+
+            // --- FLICKER ---
+            if (roll < (currentChance += flickerChancePerSlot))
+            {
+                entries.Add(new SpawnEntry(SpawnEntryType.FlickerEvent));
+                continue;
+            }
+
+            // --- NORMAL CUSTOMER ---
+            // Nếu không trúng Event nào, thì sẽ spawn Customer bình thường
+            entries.Add(new SpawnEntry(SpawnEntryType.Normal));
+        }
+
+        // --- BẢO ĐẢM TỐI THIỂU (Guarantees) ---
+        // Phải có ít nhất 1 lần Twins (từ vị trí thứ 2 trở đi để không chèn lên ông Khách đầu tiên)
+        if (!twinsAdded && totalSlots > 1)
+        {
+            int insertIndex = Random.Range(1, entries.Count);
+            entries[insertIndex] = new SpawnEntry(SpawnEntryType.TwinsEvent);
+        }
+
+        // Đêm 3+ phải có ít nhất 1 lần Clown (cũng từ vị trí thứ 2 trở đi)
+        if (night >= 3 && !clownAdded && totalSlots > 1)
+        {
+            // Thường nhét Clown vào nửa sau đêm cho khó
+            int insertIndex = Random.Range(entries.Count / 2, entries.Count);
+            // Đảm bảo không ghi đè lên index 1 nếu rủi ro random
+            insertIndex = Mathf.Max(1, insertIndex);
+            entries[insertIndex] = new SpawnEntry(SpawnEntryType.ClownEvent);
         }
 
         return entries;
