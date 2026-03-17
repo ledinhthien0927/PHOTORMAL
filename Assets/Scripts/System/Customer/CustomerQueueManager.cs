@@ -244,20 +244,40 @@ public class CustomerQueueManager : MonoBehaviour
         isProcessing = true;
         yield return new WaitForSeconds(initialSpawnDelay);
 
-        while (spawnQueue.Count > 0)
+        while (true)
         {
             // Chờ đến khi không còn khách nào đang active
             yield return new WaitUntil(() => currentCustomersAlive <= 0);
 
-            SpawnEntry entry = spawnQueue.Dequeue();
-            ProcessEntry(entry);
+            // Kiểm tra xem đã đủ tiền chưa? Nếu đủ rồi thì dừng spawn
+            if (NightManager.Instance != null && NightManager.Instance.IsTargetMet())
+            {
+                Debug.Log("[CustomerQueueManager] Goal reached. Stopping spawns for tonight.");
+                break;
+            }
 
-            // Chờ một chút sau khi spawn trước khi kiểm tra tiếp
-            yield return new WaitForSeconds(delayBetweenCustomers);
+            // Nếu hết queue mà vẫn chưa đủ tiền -> Rebuild queue mới
+            if (spawnQueue.Count == 0)
+            {
+                Debug.Log("[CustomerQueueManager] Queue empty but target not met. Rebuilding queue...");
+                int night = GameProgress.Instance.CurrentNight;
+                List<SpawnEntry> entries = BuildEntryList(night);
+                foreach (var e in entries)
+                    spawnQueue.Enqueue(e);
+            }
+
+            if (spawnQueue.Count > 0)
+            {
+                SpawnEntry entry = spawnQueue.Dequeue();
+                ProcessEntry(entry);
+
+                // Chờ một chút sau khi spawn trước khi kiểm tra tiếp
+                yield return new WaitForSeconds(delayBetweenCustomers);
+            }
         }
 
         isProcessing = false;
-        Debug.Log("[CustomerQueueManager] Hết queue đêm nay.");
+        Debug.Log("[CustomerQueueManager] Hết queue đêm nay (Mục tiêu đã đạt).");
     }
 
     private void ProcessEntry(SpawnEntry entry)
