@@ -38,6 +38,20 @@ public class CustomerSpawner : MonoBehaviour
     private void Start()
     {
         SpawnSpecialModels();
+        ShufflePrefabs();
+    }
+
+    private void ShufflePrefabs()
+    {
+        if (normalCustomerPrefabs.Count <= 1) return;
+        
+        for (int i = 0; i < normalCustomerPrefabs.Count; i++)
+        {
+            CustomerController temp = normalCustomerPrefabs[i];
+            int randomIndex = Random.Range(i, normalCustomerPrefabs.Count);
+            normalCustomerPrefabs[i] = normalCustomerPrefabs[randomIndex];
+            normalCustomerPrefabs[randomIndex] = temp;
+        }
     }
 
     private void SpawnSpecialModels()
@@ -75,8 +89,14 @@ public class CustomerSpawner : MonoBehaviour
             return;
         }
 
+        if (currentIndex >= normalCustomerPrefabs.Count)
+        {
+            currentIndex = 0;
+            ShufflePrefabs();
+        }
+
         CustomerController prefab = normalCustomerPrefabs[currentIndex];
-        currentIndex = (currentIndex + 1) % normalCustomerPrefabs.Count;
+        currentIndex++;
 
         CustomerController customer = Instantiate(
             prefab,
