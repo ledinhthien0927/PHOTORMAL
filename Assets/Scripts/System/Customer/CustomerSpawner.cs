@@ -81,7 +81,7 @@ public class CustomerSpawner : MonoBehaviour
     }
 
     [ContextMenu("Spawn Normal Customer")]
-    public void SpawnNormalCustomer()
+    public void SpawnNormalCustomer(bool willFlicker = false)
     {
         if (normalCustomerPrefabs.Count == 0 || !spawnPoint || !standByPC || !photoSpot || !exitPoint || !outsidePoint || !insidePoint)
         {
@@ -104,6 +104,7 @@ public class CustomerSpawner : MonoBehaviour
             spawnPoint.rotation
         );
 
+        customer.willTriggerFlicker = willFlicker;
         customer.Init(standByPC, mainDoorBlocker, photoSpot, exitPoint, outsidePoint, insidePoint);
         customer.SetOrderService(orderService);
         customer.SetPlayer(player);

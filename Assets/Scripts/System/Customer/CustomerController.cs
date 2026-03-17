@@ -42,6 +42,7 @@ public class CustomerController : MonoBehaviour, IInteractable
 
     [Header("Special Identity")]
     public bool isClown = false;
+    public bool willTriggerFlicker = false;
 
     private NavMeshAgent agent;
     private CustomerAnimator customerAnimator;
@@ -278,6 +279,11 @@ public class CustomerController : MonoBehaviour, IInteractable
             hasPhotoTaken = false;
             NotifyReady(true);
             StartListeningPhotoCaptured();
+            
+            if (willTriggerFlicker)
+            {
+                StartCoroutine(FlickerTimerRoutine());
+            }
         }
         else if (state == CustomerState.ReturningToPC && ReachedDestination())
         {
@@ -364,6 +370,20 @@ public class CustomerController : MonoBehaviour, IInteractable
             return;
 
         hasPhotoTaken = true;
+    }
+
+    private IEnumerator FlickerTimerRoutine()
+    {
+        // Chờ từ 1 đến 3 giây
+        float waitTime = Random.Range(1f, 3f);
+        yield return new WaitForSeconds(waitTime);
+        
+        // Kích hoạt sự kiện chớp đèn nếu có sự kiện này trong game
+        if (EventManager.Instance != null)
+        {
+            Debug.Log($"[CustomerController] {name} is triggering the FlickerLight event while waiting!");
+            EventManager.Instance.TriggerEvent("FlickerLight");
+        }
     }
 
     private void GenerateOrder()
