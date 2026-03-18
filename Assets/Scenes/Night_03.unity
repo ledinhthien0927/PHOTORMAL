@@ -5877,6 +5877,10 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 1406271590}
+    - target: {fileID: 7531591397972893838, guid: c68c6b007d165c341b61d310ca97f4a6, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -7147,7 +7151,7 @@ Transform:
   m_GameObject: {fileID: 1007369044}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.929, y: 0.892, z: 1.189}
+  m_LocalPosition: {x: 0.929, y: 0.892, z: 0.8}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8593,7 +8597,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 10
   m_TargetDisplay: 0
 --- !u!224 &1282347482
 RectTransform:
@@ -10267,6 +10271,7 @@ GameObject:
   - component: {fileID: 1596543067}
   - component: {fileID: 1596543066}
   - component: {fileID: 1596543065}
+  - component: {fileID: 1596543068}
   m_Layer: 5
   m_Name: Btn_Leave
   m_TagString: Untagged
@@ -10375,6 +10380,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1596543063}
   m_CullTransparentMesh: 1
+--- !u!114 &1596543068
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1596543063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0be19280f35aec44087121ead65a4771, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1606678292
 GameObject:
   m_ObjectHideFlags: 0
@@ -10808,7 +10825,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 79b5e4cb965c29544b9d9583752e15c4, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.075
+      value: -0.464
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 79b5e4cb965c29544b9d9583752e15c4, type: 3}
       propertyPath: m_LocalRotation.w
@@ -15302,7 +15319,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6122112617519629795, guid: 2138cb3a5efc0514f8ab510cce5ab14f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.179
+      value: 0.343
       objectReference: {fileID: 0}
     - target: {fileID: 6122112617519629795, guid: 2138cb3a5efc0514f8ab510cce5ab14f, type: 3}
       propertyPath: m_LocalRotation.w

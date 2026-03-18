@@ -29,6 +29,11 @@ public sealed class PlayerMessageUI : MonoBehaviour
             messageText.gameObject.SetActive(false);
     }
 
+    private void OnDisable()
+    {
+        ForceHideImmediate();
+    }
+
     public void ShowMessage(string message)
     {
         ShowMessage(message, defaultDuration);
@@ -64,7 +69,24 @@ public sealed class PlayerMessageUI : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(duration);
 
-        messageText.gameObject.SetActive(false);
+        HideMessageInternal();
+    }
+
+    private void ForceHideImmediate()
+    {
+        if (routine != null)
+        {
+            StopCoroutine(routine);
+            routine = null;
+        }
+
+        HideMessageInternal();
+    }
+
+    private void HideMessageInternal()
+    {
+        if (messageText != null)
+            messageText.gameObject.SetActive(false);
 
         if (interactPromptRoot != null && wasInteractPromptActiveBeforeMessage)
             interactPromptRoot.SetActive(true);
