@@ -172,10 +172,21 @@ public class CustomerQueueManager : MonoBehaviour
 
         bool twinsAdded = false;
         bool clownAdded = false;
+        
+        bool lastWasEvent = false;
 
         // 2. Từ slot thứ 2 trở đi, Random Khách HOẶC Event
         for (int i = 1; i < totalSlots; i++)
         {
+            // Tránh spawn 2 event liên tiếp (Bug 12)
+            if (lastWasEvent)
+            {
+                bool isFlickerAttached = (Random.value < flickerChancePerSlot);
+                entries.Add(new SpawnEntry(SpawnEntryType.Normal, isFlickerAttached));
+                lastWasEvent = false;
+                continue;
+            }
+
             float roll = Random.value;
             float currentChance = 0f;
             
@@ -184,6 +195,7 @@ public class CustomerQueueManager : MonoBehaviour
             {
                 entries.Add(new SpawnEntry(SpawnEntryType.TwinsEvent));
                 twinsAdded = true;
+                lastWasEvent = true;
                 continue;
             }
             
@@ -192,6 +204,7 @@ public class CustomerQueueManager : MonoBehaviour
             {
                 entries.Add(new SpawnEntry(SpawnEntryType.ClownEvent));
                 clownAdded = true;
+                lastWasEvent = true;
                 continue;
             }
             
@@ -199,19 +212,21 @@ public class CustomerQueueManager : MonoBehaviour
             if (roll < (currentChance += footstepChancePerSlot))
             {
                 entries.Add(new SpawnEntry(SpawnEntryType.FootstepEvent));
+                lastWasEvent = true;
                 continue;
             }
 
             // --- NORMAL CUSTOMER ---
             // Nếu không trúng Event chắn queue nào trên kia, thì spawn Customer.
             // Customer này có thể mang theo cờ FlickerLight.
-            bool isFlickerAttached = false;
+            bool isFlickerAttachedNormal = false;
             if (roll < (currentChance += flickerChancePerSlot))
             {
-                isFlickerAttached = true;
+                isFlickerAttachedNormal = true;
             }
             
-            entries.Add(new SpawnEntry(SpawnEntryType.Normal, isFlickerAttached));
+            entries.Add(new SpawnEntry(SpawnEntryType.Normal, isFlickerAttachedNormal));
+            lastWasEvent = false;
         }
 
         // --- BẢO ĐẢM TỐI THIỂU (Guarantees) ---
@@ -219,6 +234,7 @@ public class CustomerQueueManager : MonoBehaviour
         if (!twinsAdded && totalSlots > 1)
         {
             int insertIndex = Random.Range(1, entries.Count);
+            // Cố gắng không đè lên một khoảng trống giữa các Event khác (nếu cần thiết)
             entries[insertIndex] = new SpawnEntry(SpawnEntryType.TwinsEvent);
         }
 

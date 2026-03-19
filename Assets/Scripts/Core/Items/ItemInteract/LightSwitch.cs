@@ -13,15 +13,9 @@ public class LightSwitch : MonoBehaviour, IInteractable
         if (targetLights == null || targetLights.Length == 0)
             targetLights = GetComponentsInChildren<Light>(true);
 
-        // Sync initial state from the actual light component instead of defaulting to false
-        if (targetLights != null && targetLights.Length > 0 && targetLights[0] != null)
-        {
-            isOn = targetLights[0].enabled;
-        }
-        else
-        {
-            SetLights(isOn);
-        }
+        // Turn OFF lights at the start of the scene per user request (Bug 11)
+        isOn = false;
+        SetLights(isOn);
 
         // Initialize RuleContext if this is the living room switch
         if (isLivingRoomSwitch && RuleContext.Instance != null)
