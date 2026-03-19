@@ -4217,10 +4217,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   customerServiceTimeLimit: 45
-  backDoorGracePeriod: 10
+  backDoorGracePeriod: 5
   footstepGracePeriod: 5
   twinsGracePeriod: 10
-  clownGracePeriod: 30
+  clownGracePeriod: 19
   serviceCountdown: 0
   backDoorCountdown: 0
   footstepCountdown: 0

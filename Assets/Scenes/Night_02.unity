@@ -4895,6 +4895,7 @@ GameObject:
   - component: {fileID: 525386649}
   - component: {fileID: 525386650}
   - component: {fileID: 525386651}
+  - component: {fileID: 525386652}
   m_Layer: 0
   m_Name: RuleManager
   m_TagString: Untagged
@@ -4930,10 +4931,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   customerServiceTimeLimit: 45
-  backDoorGracePeriod: 10
+  backDoorGracePeriod: 5
   footstepGracePeriod: 5
   twinsGracePeriod: 10
-  clownGracePeriod: 30
+  clownGracePeriod: 19
   serviceCountdown: 0
   backDoorCountdown: 0
   footstepCountdown: 0
@@ -4962,6 +4963,28 @@ MonoBehaviour:
   StudioEnterTime: 20
   ClownAppearTime: 2
   CustomerServiceStartTime: 0
+--- !u!114 &525386652
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 525386648}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3885c721f9c9f55428ba84cf718ed9fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  customerServiceTimeLimit: 45
+  backDoorGracePeriod: 5
+  footstepGracePeriod: 5
+  twinsGracePeriod: 10
+  clownGracePeriod: 19
+  serviceCountdown: 0
+  backDoorCountdown: 0
+  footstepCountdown: 0
+  twinsCountdown: 0
+  clownCountdown: 0
 --- !u!1 &528983783
 GameObject:
   m_ObjectHideFlags: 0
