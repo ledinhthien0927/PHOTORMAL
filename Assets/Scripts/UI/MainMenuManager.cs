@@ -53,11 +53,12 @@ public class MainMenuManager : MonoBehaviour
         if (SaveSystem.HasSave())
         {
             int savedNight = SaveSystem.LoadNight();
+            Debug.Log($"[MainMenuManager] Save found! Saved Night: {savedNight}");
             LoadNight(savedNight);
         }
         else
         {
-            Debug.Log("[MainMenuManager] No save found, restarting from Night 1.");
+            Debug.Log("[MainMenuManager] No save found in PlayerPrefs! Restarting from Night 1.");
             OnRestartClicked();
         }
     }
@@ -73,13 +74,19 @@ public class MainMenuManager : MonoBehaviour
 
     private void LoadNight(int night)
     {
+        Debug.Log($"[MainMenuManager] LoadNight called with Night: {night}");
         if (GameProgress.Instance != null)
         {
             GameProgress.Instance.SetNight(night);
+            Debug.Log($"[MainMenuManager] GameProgress updated to Night: {GameProgress.Instance.CurrentNight}");
+        }
+        else
+        {
+            Debug.LogError("[MainMenuManager] GameProgress.Instance is NULL during LoadNight!");
         }
 
         string nightSceneName = $"Night_{night:D2}";
-        Debug.Log($"[MainMenuManager] Loading scene: {nightSceneName}");
+        Debug.Log($"[MainMenuManager] FINAL Loading scene: {nightSceneName}");
         SceneManager.LoadScene(nightSceneName);
     }
 

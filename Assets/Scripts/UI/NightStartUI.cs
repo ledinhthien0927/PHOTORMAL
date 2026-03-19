@@ -42,20 +42,20 @@ public class NightStartUI : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < fadeDuration)
         {
-            elapsed += Time.deltaTime;
+            elapsed += Time.unscaledDeltaTime;
             canvasGroup.alpha = Mathf.Clamp01(elapsed / fadeDuration);
             yield return null;
         }
         canvasGroup.alpha = 1f;
 
         // 3. Wait
-        yield return new WaitForSeconds(displayDuration);
+        yield return new WaitForSecondsRealtime(displayDuration);
 
         // 4. Fade Out
         elapsed = 0f;
         while (elapsed < fadeDuration)
         {
-            elapsed += Time.deltaTime;
+            elapsed += Time.unscaledDeltaTime;
             canvasGroup.alpha = Mathf.Clamp01(1f - (elapsed / fadeDuration));
             yield return null;
         }

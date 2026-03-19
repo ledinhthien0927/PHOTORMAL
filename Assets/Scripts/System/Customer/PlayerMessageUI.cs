@@ -88,7 +88,7 @@ public sealed class PlayerMessageUI : MonoBehaviour
         if (messageText != null)
             messageText.gameObject.SetActive(false);
 
-        if (interactPromptRoot != null && wasInteractPromptActiveBeforeMessage)
+        if (interactPromptRoot != null)
             interactPromptRoot.SetActive(true);
 
         routine = null;
