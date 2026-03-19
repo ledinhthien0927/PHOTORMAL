@@ -71,6 +71,13 @@ public class WarningManager : MonoBehaviour, IGameEvent
             {
                 isWarningActive = false;
                 warningPanel.SetActive(false);
+                
+                // Stop the ringing audio before firing the Game Over event
+                if (AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.StopSupportCall();
+                }
+                
                 EventManager.Instance.TriggerEvent("InstantGameOver");
             }
         }

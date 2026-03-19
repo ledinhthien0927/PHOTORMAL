@@ -117,12 +117,19 @@ public sealed class StudioManager : MonoBehaviour
         if (cameraController == null || photoData == null)
             return false;
 
-        lastShotTime = Time.time;
-        
         // Báo cho RuleManager biết người chơi vừa mới bấm nút chụp ảnh
         // (để kiểm tra xem có đang nháy đèn hay không)
         GameEventAPI.OnPlayerShootPhoto?.Invoke();
 
+        // Mới: Nếu đang nháy đèn, chúng ta không cho phép chụp ảnh thực tế
+        if (RuleContext.Instance != null && RuleContext.Instance.IsFlickering)
+        {
+            Debug.Log("[StudioManager] Photo blocked due to flicker glitch!");
+            return false;
+        }
+
+        lastShotTime = Time.time;
+        
         cameraController.CapturePhoto(texture =>
         {
             if (texture == null)

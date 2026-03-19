@@ -21,8 +21,8 @@ public class RuleManager : MonoBehaviour
     [Header("Rule Settings")]
     [SerializeField] private float customerServiceTimeLimit = 30f;
     [SerializeField] private float backDoorGracePeriod = 10f;
-    [SerializeField] private float footstepGracePeriod = 10f;
-    [SerializeField] private float twinsGracePeriod = 10f;
+    [SerializeField] private float footstepGracePeriod = 5f;
+    [SerializeField] private float twinsGracePeriod = 5f;
     [SerializeField] private float clownGracePeriod = 10f;
 
     [Header("Debug Status (Read Only)")]
@@ -43,6 +43,7 @@ public class RuleManager : MonoBehaviour
 
     // Lưu tạm thời gian vi phạm sinh đôi (người chơi có 5s để tắt đèn)
     private float twinsViolationTimer = 0f;
+    private bool hasEnteredToiletDuringFootstep = false;
 
     private void Awake()
     {
@@ -51,6 +52,9 @@ public class RuleManager : MonoBehaviour
 
     private void OnEnable()
     {
+        // Force grace period to 5s to prevent inspector values from breaking the footstep event logic
+        //footstepGracePeriod = 5f;
+
         // ==== SUBSCRIBING TO PLAYER INTERACTION EVENTS ====
         GameEventAPI.OnPlayerShootPhoto += HandlePlayerShoot;
         GameEventAPI.OnBackDoorStateChanged += HandleBackDoorState;
@@ -91,6 +95,7 @@ public class RuleManager : MonoBehaviour
         backDoorOpenTimer = 0f;
         footstepViolationTimer = 0f;
         twinsViolationTimer = 0f;
+        hasEnteredToiletDuringFootstep = false;
 
         // Đêm 1
         activeRules.Add(RuleType.NoFlickerShoot);
@@ -256,26 +261,47 @@ public class RuleManager : MonoBehaviour
     {
         if (!activeRules.Contains(RuleType.HideWhenFootstep)) return;
 
-        // Nếu tiếng chân đang kêu MÀ người chơi KHÔNG ở trong wc
-        if (RuleContext.Instance.IsFootstepActive && !RuleContext.Instance.IsPlayerInToilet)
+        if (!RuleContext.Instance.IsFootstepActive)
         {
-            footstepViolationTimer += Time.deltaTime;
-            footstepCountdown = footstepGracePeriod - footstepViolationTimer;
+            footstepViolationTimer = 0f;
+            footstepCountdown = 0f;
+            hasEnteredToiletDuringFootstep = false;
+            return;
+        }
 
-            // Nếu đứng ngoài đủ thời gian quy định thì mới phạt
-            if (footstepViolationTimer >= footstepGracePeriod)
-            {
-                BreakRule(RuleType.HideWhenFootstep);
-                RuleContext.Instance.IsFootstepActive = false; 
-                footstepViolationTimer = 0f;
-                footstepCountdown = 0f;
-            }
+        if (RuleContext.Instance.IsPlayerInToilet)
+        {
+            // Người chơi đã vào WC thành công -> Đánh dấu & reset timer đếm ngược
+            hasEnteredToiletDuringFootstep = true;
+            footstepViolationTimer = 0f;
+            footstepCountdown = 0f;
         }
         else
         {
-            // Nếu người chơi đã vào WC hoặc hết tiếng chân -> Reset timer
-            footstepViolationTimer = 0f;
-            footstepCountdown = 0f;
+            // Người chơi đang ở ngoài trong khi tiếng chân vẫn vang lên
+            if (hasEnteredToiletDuringFootstep)
+            {
+                // Đã vào rồi mà bỏ ra sớm -> Phạt MỘT LỖI ngay lập tức
+                BreakRule(RuleType.HideWhenFootstep);
+                RuleContext.Instance.IsFootstepActive = false; // Ngừng đếm để không bị phạt liên tiếp
+                footstepViolationTimer = 0f;
+                footstepCountdown = 0f;
+                hasEnteredToiletDuringFootstep = false;
+            }
+            else
+            {
+                // Chưa vào WC lần nào -> Đếm thời gian Grace Period
+                footstepViolationTimer += Time.deltaTime;
+                footstepCountdown = footstepGracePeriod - footstepViolationTimer;
+
+                if (footstepViolationTimer >= footstepGracePeriod)
+                {
+                    BreakRule(RuleType.HideWhenFootstep);
+                    RuleContext.Instance.IsFootstepActive = false; 
+                    footstepViolationTimer = 0f;
+                    footstepCountdown = 0f;
+                }
+            }
         }
     }
 

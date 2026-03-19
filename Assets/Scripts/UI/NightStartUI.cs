@@ -12,9 +12,12 @@ public class NightStartUI : MonoBehaviour
     [SerializeField] private float fadeDuration = 2.0f;
     [SerializeField] private float displayDuration = 2.0f;
     [SerializeField] private string textPrefix = "Night ";
+    private bool isFinished = false;
 
-    private void Start()
+    private void OnEnable()
     {
+        if (isFinished) return;
+
         if (nightText == null) nightText = GetComponent<TMP_Text>();
         if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
 
@@ -25,12 +28,18 @@ public class NightStartUI : MonoBehaviour
 
         if (canvasGroup != null)
         {
+            StopAllCoroutines();
             StartCoroutine(FadeSequence());
         }
         else
         {
             Debug.LogWarning("[NightStartUI] CanvasGroup is missing! Animation won't play.");
         }
+    }
+
+    private void Start()
+    {
+        // Handled in OnEnable
     }
 
     private IEnumerator FadeSequence()
@@ -61,7 +70,8 @@ public class NightStartUI : MonoBehaviour
         }
         canvasGroup.alpha = 0f;
 
-        // Optionally disable the object or parent after finishing
+        // Finish
+        isFinished = true;
         gameObject.SetActive(false);
     }
 }

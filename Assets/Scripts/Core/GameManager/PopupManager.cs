@@ -179,7 +179,7 @@ public class PopupManager : MonoBehaviour, IGameEvent
     {
         ResumeTime();
         if (gameOverPopup != null) gameOverPopup.SetActive(false);
-        if (winNightPopup != null) winNightPopup.SetActive(false);
+        //if (winNightPopup != null) winNightPopup.SetActive(false);
         if (pausePopup != null) pausePopup.SetActive(false);
         if (gameplayCanvas != null) gameplayCanvas.SetActive(true);
     }

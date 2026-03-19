@@ -4218,7 +4218,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   customerServiceTimeLimit: 45
   backDoorGracePeriod: 10
-  footstepGracePeriod: 10
+  footstepGracePeriod: 5
   twinsGracePeriod: 10
   clownGracePeriod: 30
   serviceCountdown: 0
