@@ -19,14 +19,14 @@ public class RuleManager : MonoBehaviour
     public IEnumerable<RuleType> ActiveRules => activeRules;
 
     [Header("Rule Settings")]
-    [SerializeField] private float customerServiceTimeLimit = 30f;
+    [SerializeField] private float customerServiceTimeLimit = 60f;
     [SerializeField] private float backDoorGracePeriod = 10f;
     [SerializeField] private float footstepGracePeriod = 5f;
     [SerializeField] private float twinsGracePeriod = 5f;
     [SerializeField] private float clownGracePeriod = 10f;
 
     [Header("Debug Status (Read Only)")]
-    [SerializeField] private float serviceCountdown;
+    public float serviceCountdown;
     [SerializeField] private float backDoorCountdown;
     [SerializeField] private float footstepCountdown;
     [SerializeField] private float twinsCountdown;
