@@ -383,9 +383,9 @@ public class RuleManager : MonoBehaviour
             
             // Trigger Instant Game Over Popup directly
             if (PopupManager.Instance != null)
-                PopupManager.Instance.ShowGameOverClown();
+                PopupManager.Instance.ShowGameOver();
             else if (EventManager.Instance != null)
-                EventManager.Instance.TriggerEvent("InstantGameOverClown");
+                EventManager.Instance.TriggerEvent("InstantGameOver");
 
             RuleContext.Instance.IsClownAppeared = false; 
             clownCountdown = 0f;

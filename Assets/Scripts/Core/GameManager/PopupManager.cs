@@ -10,7 +10,6 @@ public class PopupManager : MonoBehaviour, IGameEvent
     [SerializeField] private GameObject gameOverPopup;
     [SerializeField] private GameObject winNightPopup;
     [SerializeField] private GameObject pausePopup;
-    [SerializeField] private GameObject gameOverClownPopup;
 
     [Header("Settings")]
     [SerializeField] private float popupFadeDuration = 0.5f;
@@ -33,7 +32,6 @@ public class PopupManager : MonoBehaviour, IGameEvent
 
         // Initialize popups to hidden state
         if (gameOverPopup != null) gameOverPopup.SetActive(false);
-        if (gameOverClownPopup != null) gameOverClownPopup.SetActive(false);
         if (winNightPopup != null) winNightPopup.SetActive(false);
         if (pausePopup != null) pausePopup.SetActive(false);
     }
@@ -44,15 +42,7 @@ public class PopupManager : MonoBehaviour, IGameEvent
         if (EventManager.Instance != null)
         {
             EventManager.Instance.RegisterEvent("InstantGameOver", this);
-            EventManager.Instance.RegisterEvent("InstantGameOverClown", new ClownGameOverHandler(this));
         }
-    }
-
-    private class ClownGameOverHandler : IGameEvent
-    {
-        private PopupManager manager;
-        public ClownGameOverHandler(PopupManager m) { manager = m; }
-        public void Execute() { manager.ShowGameOverClown(); }
     }
 
     // --- Interface Execution ---
@@ -73,12 +63,6 @@ public class PopupManager : MonoBehaviour, IGameEvent
     {
         Debug.Log("[PopupManager] Game Over Triggered!");
         DisplayPopup(gameOverPopup);
-    }
-
-    public void ShowGameOverClown()
-    {
-        Debug.Log("[PopupManager] Clown Game Over Triggered!");
-        DisplayPopup(gameOverClownPopup);
     }
 
     public void PauseGame()
@@ -195,7 +179,6 @@ public class PopupManager : MonoBehaviour, IGameEvent
     {
         ResumeTime();
         if (gameOverPopup != null) gameOverPopup.SetActive(false);
-        if (gameOverClownPopup != null) gameOverClownPopup.SetActive(false);
         //if (winNightPopup != null) winNightPopup.SetActive(false);
         if (pausePopup != null) pausePopup.SetActive(false);
         if (gameplayCanvas != null) gameplayCanvas.SetActive(true);
