@@ -9854,6 +9854,7 @@ MonoBehaviour:
   gameOverPopup: {fileID: 1933876879}
   winNightPopup: {fileID: 574445247}
   pausePopup: {fileID: 626591513}
+  gameOverClownPopup: {fileID: 1235406243}
   popupFadeDuration: 0.5
   mainMenuSceneName: MainMenu
 --- !u!1 &1411708995
