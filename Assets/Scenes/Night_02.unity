@@ -4930,7 +4930,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3885c721f9c9f55428ba84cf718ed9fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  customerServiceTimeLimit: 60
+  customerServiceTimeLimit: 45
   backDoorGracePeriod: 5
   footstepGracePeriod: 5
   twinsGracePeriod: 10
@@ -8362,7 +8362,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 83c2f040b31faa94e847e2d634a6e69e, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 322a13e1e2381734a94018e13fa32088, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

@@ -87,6 +87,7 @@ public class MainMenuManager : MonoBehaviour
 
         string nightSceneName = $"Night_{night:D2}";
         Debug.Log($"[MainMenuManager] FINAL Loading scene: {nightSceneName}");
+        Time.timeScale = 1f;
         SceneManager.LoadScene(nightSceneName);
     }
 
