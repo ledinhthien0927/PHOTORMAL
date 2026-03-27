@@ -152,7 +152,7 @@ public class EnvironmentEffectController : MonoBehaviour, IGameEvent
     private IEnumerator ShowGlitchEffectRoutine()
     {
         if (staticGlitchEffect != null) staticGlitchEffect.SetActive(true);
-        yield return new WaitForSeconds(0.5f); // Hiện nhiễu trong 0.5s rồi tắt
+        yield return new WaitForSecondsRealtime(0.5f); // Hiện nhiễu trong 0.5s rồi tắt (Dùng Realtime để không bị kẹt khi pause)
         if (staticGlitchEffect != null) staticGlitchEffect.SetActive(false);
     }
 
