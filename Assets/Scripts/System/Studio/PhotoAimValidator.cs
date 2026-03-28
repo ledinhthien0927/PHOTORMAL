@@ -1,18 +1,12 @@
 using UnityEngine;
 
-/// <summary>
-/// Simple photo validation:
-/// - Only runs when enabled by StudioManager (PhotoMode)
-/// - Customer must be READY first (signaled by CustomerController via StudioManager)
-/// - Then player must aim at a Pose Aim Zone collider (center screen ray hits this collider)
-/// </summary>
 public sealed class PhotoAimValidator : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Camera playerCamera;
-    [SerializeField] private Collider aimZoneCollider;              // Drag PoseAimZone(BoxCollider) here
-    [SerializeField] private StudioLightFlicker studioLightFlicker; // Optional
-    [SerializeField] private CrosshairUI crosshairUI;               // Dot UI
+    [SerializeField] private Collider aimZoneCollider;
+    [SerializeField] private StudioLightFlicker studioLightFlicker;
+    [SerializeField] private CrosshairUI crosshairUI;
 
     [Header("Rules")]
     [SerializeField] private bool requireCustomerReady = true;
@@ -21,6 +15,10 @@ public sealed class PhotoAimValidator : MonoBehaviour
 
     [Header("Aim Settings")]
     [SerializeField] private float aimDistance = 8f;
+
+    [Header("Viewport Check")]
+    [SerializeField] private float centerBoxWidth = 0.2f;
+    [SerializeField] private float centerBoxHeight = 0.2f;
 
     [Header("Debug")]
     [SerializeField] private bool logDebug = false;
@@ -39,14 +37,9 @@ public sealed class PhotoAimValidator : MonoBehaviour
         if (crosshairUI != null)
             crosshairUI.SetVisible(enabled);
 
-        // Default to red whenever (re)enabled
         SetCanShoot(false);
     }
 
-    /// <summary>
-    /// CustomerController -> StudioManager -> here.
-    /// READY must be true before checking aim-at-zone.
-    /// </summary>
     public void SetCustomerReady(bool ready)
     {
         _customerReady = ready;
@@ -75,12 +68,11 @@ public sealed class PhotoAimValidator : MonoBehaviour
         if (!okReady)
         {
             SetCanShoot(false);
-            if (logDebug) Debug.Log("[AimValidator] Waiting for customer READY...");
             return;
         }
 
         bool okFlicker = !requireNoFlicker || (studioLightFlicker == null || !studioLightFlicker.IsFlickering);
-        bool okAim = !requireAimAtZone || CheckAimAtZone();
+        bool okAim = !requireAimAtZone || CheckAimAtZoneViewport();
 
         bool can = okFlicker && okAim;
         SetCanShoot(can);
@@ -89,15 +81,33 @@ public sealed class PhotoAimValidator : MonoBehaviour
             Debug.Log($"[AimValidator] Ready={okReady} Flicker={okFlicker} AimZone={okAim} Can={can}");
     }
 
-    private bool CheckAimAtZone()
+    private bool CheckAimAtZoneViewport()
     {
         if (aimZoneCollider == null || playerCamera == null)
             return false;
 
-        Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        Bounds bounds = aimZoneCollider.bounds;
+        Vector3 center = bounds.center;
 
-        // Works even if aimZoneCollider is Trigger
-        return aimZoneCollider.Raycast(ray, out _, aimDistance);
+        Vector3 viewportPoint = playerCamera.WorldToViewportPoint(center);
+
+        if (viewportPoint.z <= 0f)
+            return false;
+
+        float distanceToCamera = Vector3.Distance(playerCamera.transform.position, center);
+        if (distanceToCamera > aimDistance)
+            return false;
+
+        float minX = 0.5f - centerBoxWidth * 0.5f;
+        float maxX = 0.5f + centerBoxWidth * 0.5f;
+        float minY = 0.5f - centerBoxHeight * 0.5f;
+        float maxY = 0.5f + centerBoxHeight * 0.5f;
+
+        bool insideBox =
+            viewportPoint.x >= minX && viewportPoint.x <= maxX &&
+            viewportPoint.y >= minY && viewportPoint.y <= maxY;
+
+        return insideBox;
     }
 
     private void SetCanShoot(bool can)
@@ -113,6 +123,8 @@ public sealed class PhotoAimValidator : MonoBehaviour
     private void OnValidate()
     {
         if (aimDistance < 0.1f) aimDistance = 0.1f;
+        centerBoxWidth = Mathf.Clamp(centerBoxWidth, 0.01f, 1f);
+        centerBoxHeight = Mathf.Clamp(centerBoxHeight, 0.01f, 1f);
     }
 #endif
 }
