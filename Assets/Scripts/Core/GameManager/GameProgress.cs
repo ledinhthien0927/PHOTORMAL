@@ -3,7 +3,18 @@ using System;
 
 public class GameProgress : MonoBehaviour
 {
-    public static GameProgress Instance;
+    private static GameProgress instance;
+    public static GameProgress Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindObjectOfType<GameProgress>();
+            }
+            return instance;
+        }
+    }
 
     public int CurrentNight { get; private set; } = 1;
     public int CurrentMoney { get; private set; }
@@ -29,12 +40,12 @@ public class GameProgress : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
+        if (instance == null)
         {
-            Instance = this;
+            instance = this;
             DontDestroyOnLoad(gameObject);
         }
-        else
+        else if (instance != this)
         {
             Destroy(gameObject);
         }

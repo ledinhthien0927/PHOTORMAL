@@ -34,6 +34,10 @@ public class PopupManager : MonoBehaviour, IGameEvent
         if (gameOverPopup != null) gameOverPopup.SetActive(false);
         if (winNightPopup != null) winNightPopup.SetActive(false);
         if (pausePopup != null) pausePopup.SetActive(false);
+
+        // Ensure game is unpaused and UI is ready
+        Time.timeScale = 1f;
+        if (gameplayCanvas != null) gameplayCanvas.SetActive(true);
     }
 
     private void Start()
@@ -120,6 +124,11 @@ public class PopupManager : MonoBehaviour, IGameEvent
     {
         string currentSceneName = SceneManager.GetActiveScene().name;
         Debug.Log($"[PopupManager] Restarting Level: {currentSceneName}");
+
+        if (GameProgress.Instance != null)
+        {
+            GameProgress.Instance.ResetNightData();
+        }
         
         ResumeTime();
         SceneManager.LoadScene(currentSceneName);
@@ -141,18 +150,22 @@ public class PopupManager : MonoBehaviour, IGameEvent
         
         if (GameProgress.Instance != null)
         {
+            Debug.Log($"[PopupManager] Current Night before advance: {GameProgress.Instance.CurrentNight}");
+            
             // Tăng số đêm trước khi load scene mới
             GameProgress.Instance.NextNight();
             
             int nextNightNum = GameProgress.Instance.CurrentNight;
+            Debug.Log($"[PopupManager] Advanced to Night: {nextNightNum}");
+            
+            // Save progress when transitioning to next night
+            SaveSystem.SaveNight(nextNightNum);
+            Debug.Log($"[PopupManager] SaveSystem.SaveNight({nextNightNum}) called.");
+            
             // Tên scene theo định dạng Night_01, Night_02...
             string nextSceneName = "Night_0" + nextNightNum;
             
             Debug.Log($"[PopupManager] Attempting to load: {nextSceneName}");
-            
-            // Chúng ta load scene theo tên. 
-            // Nếu bạn không có các scene Night_02, Night_03 riêng biệt mà dùng chung 1 scene
-            // thì bạn cần sửa lại đoạn này hoặc đổi tên scene trong Build Settings.
             SceneManager.LoadScene(nextSceneName);
         }
         else
@@ -170,7 +183,7 @@ public class PopupManager : MonoBehaviour, IGameEvent
     {
         ResumeTime();
         if (gameOverPopup != null) gameOverPopup.SetActive(false);
-        if (winNightPopup != null) winNightPopup.SetActive(false);
+        //if (winNightPopup != null) winNightPopup.SetActive(false);
         if (pausePopup != null) pausePopup.SetActive(false);
         if (gameplayCanvas != null) gameplayCanvas.SetActive(true);
     }
