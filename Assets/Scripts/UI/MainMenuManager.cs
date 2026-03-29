@@ -25,8 +25,11 @@ public class MainMenuManager : MonoBehaviour
     {
         Debug.Log("[MainMenuManager] Start Game Clicked!");
 
-        // If played before, show quest panel. If first time, skip directly to restart.
-        if (PlayerPrefs.GetInt("PlayedBefore", 0) == 1)
+        // Khắc phục: Nếu người chơi vừa hoàn thành cả 3 level (GameComplete == 1), bỏ qua Quest Panel
+        bool isGameFinished = PlayerPrefs.GetInt("GameComplete", 0) == 1;
+
+        // If played before AND game is not just finished, show quest panel.
+        if (PlayerPrefs.GetInt("PlayedBefore", 0) == 1 && !isGameFinished)
         {
             if (questPanel != null)
             {
@@ -40,8 +43,13 @@ public class MainMenuManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("[MainMenuManager] First time playing, skipping Quest Panel.");
+            Debug.Log("[MainMenuManager] First time playing OR Game Finished, skipping Quest Panel.");
             PlayerPrefs.SetInt("PlayedBefore", 1);
+            
+            // Xóa cờ GameComplete để những lần mở game sau lại hiện QuestPanel bình thường
+            if (isGameFinished)
+                PlayerPrefs.SetInt("GameComplete", 0);
+
             PlayerPrefs.Save();
             OnRestartClicked();
         }

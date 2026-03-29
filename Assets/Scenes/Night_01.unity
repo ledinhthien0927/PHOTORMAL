@@ -1471,6 +1471,8 @@ MonoBehaviour:
   requireAimAtZone: 1
   requireNoFlicker: 0
   aimDistance: 6
+  centerBoxWidth: 0.2
+  centerBoxHeight: 0.2
   logDebug: 0
 --- !u!114 &128890712
 MonoBehaviour:
@@ -4254,9 +4256,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   customerServiceTimeLimit: 45
   backDoorGracePeriod: 5
-  footstepGracePeriod: 5
+  footstepGracePeriod: 10
   twinsGracePeriod: 10
   clownGracePeriod: 19
+  clownTimerText: {fileID: 0}
   serviceCountdown: 0
   backDoorCountdown: 0
   footstepCountdown: 0
@@ -5814,6 +5817,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3236873693102060509, guid: c68c6b007d165c341b61d310ca97f4a6, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3723127030386331080, guid: c68c6b007d165c341b61d310ca97f4a6, type: 3}
+      propertyPath: m_SortingOrder
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4140219847136947516, guid: c68c6b007d165c341b61d310ca97f4a6, type: 3}
@@ -8305,6 +8312,7 @@ MonoBehaviour:
   gameOverPopup: {fileID: 1004555164}
   winNightPopup: {fileID: 2413338876173040500}
   pausePopup: {fileID: 1097581883719070766}
+  clownGameOverPopup: {fileID: 0}
   popupFadeDuration: 0.5
   mainMenuSceneName: MainMenu
 --- !u!1 &1411708995

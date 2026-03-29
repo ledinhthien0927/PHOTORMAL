@@ -1073,6 +1073,8 @@ MonoBehaviour:
   requireAimAtZone: 1
   requireNoFlicker: 0
   aimDistance: 6
+  centerBoxWidth: 0.2
+  centerBoxHeight: 0.2
   logDebug: 0
 --- !u!114 &128890712
 MonoBehaviour:
@@ -4933,9 +4935,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   customerServiceTimeLimit: 45
   backDoorGracePeriod: 5
-  footstepGracePeriod: 5
+  footstepGracePeriod: 10
   twinsGracePeriod: 10
   clownGracePeriod: 19
+  clownTimerText: {fileID: 0}
   serviceCountdown: 0
   backDoorCountdown: 0
   footstepCountdown: 0
@@ -4981,6 +4984,7 @@ MonoBehaviour:
   footstepGracePeriod: 5
   twinsGracePeriod: 10
   clownGracePeriod: 19
+  clownTimerText: {fileID: 0}
   serviceCountdown: 0
   backDoorCountdown: 0
   footstepCountdown: 0
@@ -10322,6 +10326,7 @@ MonoBehaviour:
   gameOverPopup: {fileID: 425600736}
   winNightPopup: {fileID: 574445247}
   pausePopup: {fileID: 626591513}
+  clownGameOverPopup: {fileID: 0}
   popupFadeDuration: 0.5
   mainMenuSceneName: MainMenu
 --- !u!1 &1411708995
