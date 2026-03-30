@@ -46,6 +46,13 @@ public class WarningManager : MonoBehaviour, IGameEvent
     private void OnDisable()
     {
         GameEventAPI.OnCallSupportClicked -= OnCallSupportClicked;
+
+        // Dừng âm thanh và tất cả coroutine khi object bị tắt hoặc bị tiêu hủy (chuyển cảnh/về menu)
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.StopSupportCall();
+        }
+        StopAllCoroutines();
     }
 
     public void ShowWarning()
