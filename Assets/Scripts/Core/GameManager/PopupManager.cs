@@ -10,6 +10,7 @@ public class PopupManager : MonoBehaviour, IGameEvent
     [SerializeField] private GameObject gameOverPopup;
     [SerializeField] private GameObject winNightPopup;
     [SerializeField] private GameObject pausePopup;
+    [SerializeField] private GameObject clownGameOverPopup; // Thêm popup Game Over riêng cho hề
 
     [Header("Settings")]
     [SerializeField] private float popupFadeDuration = 0.5f;
@@ -67,6 +68,12 @@ public class PopupManager : MonoBehaviour, IGameEvent
     {
         Debug.Log("[PopupManager] Game Over Triggered!");
         DisplayPopup(gameOverPopup);
+    }
+
+    public void ShowClownGameOver()
+    {
+        Debug.Log("[PopupManager] Clown Game Over Triggered!");
+        DisplayPopup(clownGameOverPopup);
     }
 
     public void PauseGame()
@@ -139,6 +146,17 @@ public class PopupManager : MonoBehaviour, IGameEvent
         Debug.Log($"[PopupManager] Loading Main Menu: {mainMenuSceneName}");
         
         ResumeTime();
+
+        string currentSceneName = SceneManager.GetActiveScene().name;
+        // Bắt trường hợp người chơi bấm nút "Trở về Main Menu" hoặc "Continue" trên bảng Win của màn 3
+        if (currentSceneName == "Night_03" && winNightPopup != null && winNightPopup.activeSelf)
+        {
+            Debug.Log("[PopupManager] Finished Level 3 (from GoToMainMenu)! Returning to Main Menu...");
+            PlayerPrefs.SetInt("GameComplete", 1);
+            PlayerPrefs.Save();
+            SaveSystem.ClearSave();
+        }
+
         SceneManager.LoadScene(mainMenuSceneName);
     }
 
@@ -158,6 +176,20 @@ public class PopupManager : MonoBehaviour, IGameEvent
             int nextNightNum = GameProgress.Instance.CurrentNight;
             Debug.Log($"[PopupManager] Advanced to Night: {nextNightNum}");
             
+            string currentSceneName = SceneManager.GetActiveScene().name;
+
+            // Xử lý khi hoàn thành Level 3 (Win cả game)
+            // Khắc phục: Dùng thêm check tên Scene để đảm bảo khi test riêng Night_03 trên Editor vẫn nhận diện đúng Game Complete
+            if (nextNightNum > 3 || currentSceneName == "Night_03")
+            {
+                Debug.Log("[PopupManager] Finished Level 3! Returning to Main Menu...");
+                PlayerPrefs.SetInt("GameComplete", 1); // Đánh dấu đã qua màn 3 để MainMenu biết
+                PlayerPrefs.Save(); // Lưu ngay vào bộ nhớ
+                SaveSystem.ClearSave();
+                SceneManager.LoadScene(mainMenuSceneName);
+                return;
+            }
+
             // Save progress when transitioning to next night
             SaveSystem.SaveNight(nextNightNum);
             Debug.Log($"[PopupManager] SaveSystem.SaveNight({nextNightNum}) called.");
@@ -183,6 +215,7 @@ public class PopupManager : MonoBehaviour, IGameEvent
     {
         ResumeTime();
         if (gameOverPopup != null) gameOverPopup.SetActive(false);
+        if (clownGameOverPopup != null) clownGameOverPopup.SetActive(false);
         //if (winNightPopup != null) winNightPopup.SetActive(false);
         if (pausePopup != null) pausePopup.SetActive(false);
         if (gameplayCanvas != null) gameplayCanvas.SetActive(true);

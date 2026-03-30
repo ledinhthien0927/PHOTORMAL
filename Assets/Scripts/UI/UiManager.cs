@@ -52,12 +52,16 @@ public class UIManager : MonoBehaviour
     //==============================
     public void ShowTextItem(string text)
     {
-        interactText.text = text;
-        interactPanel.SetActive(true);
+        if (interactText.text != text)
+            interactText.text = text;
+
+        if (!interactPanel.activeSelf)
+            interactPanel.SetActive(true);
     }
 
     public void HideTextItem()
     {
-        interactPanel.SetActive(false);
+        if (interactPanel.activeSelf)
+            interactPanel.SetActive(false);
     }
 }

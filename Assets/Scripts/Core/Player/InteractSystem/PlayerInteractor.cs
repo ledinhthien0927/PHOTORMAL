@@ -109,6 +109,15 @@ public sealed class PlayerInteractor : MonoBehaviour, IInteractor
             else
                 UIManager.Instance.HideTextItem();
         }
+        else if (currentTarget != null && currentTarget.CanInteract(this))
+        {
+            // Update the prompt text continuously so changes (like toggling a switch) reflect instantly
+            UIManager.Instance.ShowTextItem(currentTarget.Prompt);
+        }
+        else if (currentTarget != null && !currentTarget.CanInteract(this))
+        {
+            UIManager.Instance.HideTextItem();
+        }
     }
 
     // UI button: Pickup / Use (mobile shared button)

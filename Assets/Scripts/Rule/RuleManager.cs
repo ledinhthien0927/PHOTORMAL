@@ -23,7 +23,10 @@ public class RuleManager : MonoBehaviour
     [SerializeField] private float backDoorGracePeriod = 10f;
     [SerializeField] private float footstepGracePeriod = 5f;
     [SerializeField] private float twinsGracePeriod = 5f;
-    [SerializeField] private float clownGracePeriod = 10f;
+    [SerializeField] private float clownGracePeriod = 5f; // Đếm ngược 5s cho hề
+
+    [Header("Clown Event UI")]
+    [SerializeField] private TMPro.TMP_Text clownTimerText; // Kéo thả UI Text hiển thị bộ đếm ngược vào đây
 
     [Header("Debug Status (Read Only)")]
     public float serviceCountdown;
@@ -360,30 +363,46 @@ public class RuleManager : MonoBehaviour
         }
     }
 
-    /// <summary> Quy tắc: Tên hề ngoài cửa chờ 5s. (Đêm 3) </summary>
+    /// <summary> Quy tắc: Tên hề vào nhà trò chuyện và người chơi có 5s xử lý. (Đêm 3) </summary>
     void CheckClownDoor()
     {
         if (!activeRules.Contains(RuleType.ClownDoorOpen)) return;
 
-        if (!RuleContext.Instance.IsClownAppeared) 
+        if (!RuleContext.Instance.IsClownAppeared)
         {
             clownCountdown = 0f;
+
+            if (clownTimerText != null)
+                clownTimerText.gameObject.SetActive(false); // Ẩn đồng hồ khi không có hề
+
             return;
         }
 
-        // Tên hề đang chờ ở cửa
+        // Tên hề bắt đầu sự kiện
         clownPatienceTimer += Time.deltaTime;
         clownCountdown = clownGracePeriod - clownPatienceTimer;
 
+        // Cập nhật text UI
+        if (clownTimerText != null)
+        {
+            if (!clownTimerText.gameObject.activeSelf)
+                clownTimerText.gameObject.SetActive(true);
+            
+            clownTimerText.text = Mathf.CeilToInt(clownCountdown).ToString() + "s";
+        }
+
         if (clownPatienceTimer >= clownGracePeriod)
         {
-            // Jumpscare Instant GameOver
+            // Jumpscare Instant GameOver riêng cho Hề
             Debug.Log("[RuleManager] Clown Jumpscare! Instant Game Over.");
             GameEventAPI.OnClownJumpscare?.Invoke();
             
-            // Trigger Instant Game Over Popup directly
+            if (clownTimerText != null)
+                clownTimerText.gameObject.SetActive(false);
+
+            // Gọi popup riêng của hề (Clown Game Over)
             if (PopupManager.Instance != null)
-                PopupManager.Instance.ShowGameOver();
+                PopupManager.Instance.ShowClownGameOver();
             else if (EventManager.Instance != null)
                 EventManager.Instance.TriggerEvent("InstantGameOver");
 
