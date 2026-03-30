@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using System.Collections;
 
 public class WarningManager : MonoBehaviour, IGameEvent
 {
@@ -9,6 +10,7 @@ public class WarningManager : MonoBehaviour, IGameEvent
     [SerializeField] private GameObject warningPanel;
     [SerializeField] private TMP_Text timerText;
     [SerializeField] private Button callSupportButton;
+    [SerializeField] private float showDelay = 0.5f; // Thời gian chờ trước khi hiện Warning UI (giây)
 
     private float countdownTimer;
     private bool isWarningActive = false;
@@ -48,6 +50,14 @@ public class WarningManager : MonoBehaviour, IGameEvent
 
     public void ShowWarning()
     {
+        StartCoroutine(ShowWarningRoutine());
+    }
+
+    private IEnumerator ShowWarningRoutine()
+    {
+        // Chờ một khoảng thời gian trước khi hiện UI (để tránh đè lên các hiệu ứng như glitch)
+        yield return new WaitForSecondsRealtime(showDelay);
+
         isWarningActive = true;
         warningPanel.SetActive(true);
         countdownTimer = 5f;

@@ -16,6 +16,7 @@ public class EnvironmentEffectController : MonoBehaviour, IGameEvent
 
     [Header("UI / Screen Effects")]
     [SerializeField] private GameObject staticGlitchEffect; // Hiệu ứng nhiễu màn hình khi vi phạm luật
+    [SerializeField] private float glitchDisplayDuration = 0.5f; // Thời gian hiển thị nhiễu màn hình (giây)
 
     private Coroutine flickerCoroutine;
 
@@ -152,7 +153,7 @@ public class EnvironmentEffectController : MonoBehaviour, IGameEvent
     private IEnumerator ShowGlitchEffectRoutine()
     {
         if (staticGlitchEffect != null) staticGlitchEffect.SetActive(true);
-        yield return new WaitForSecondsRealtime(0.5f); // Hiện nhiễu trong 0.5s rồi tắt (Dùng Realtime để không bị kẹt khi pause)
+        yield return new WaitForSecondsRealtime(glitchDisplayDuration); // Hiện nhiễu trong khoảng thời gian đã định rồi tắt
         if (staticGlitchEffect != null) staticGlitchEffect.SetActive(false);
     }
 

@@ -4156,7 +4156,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 33
   m_TargetDisplay: 0
 --- !u!1 &508280933
 GameObject:
@@ -4824,7 +4824,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 3
+  m_SortingOrder: 33
   m_TargetDisplay: 0
 --- !u!1 &547618769
 GameObject:
@@ -5317,6 +5317,7 @@ MonoBehaviour:
   twinsModel: {fileID: 0}
   clownModel: {fileID: 0}
   staticGlitchEffect: {fileID: 1689038683}
+  glitchDisplayDuration: 1.5
 --- !u!114 &660994248
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7812,7 +7813,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 2
+  m_SortingOrder: 33
   m_TargetDisplay: 0
 --- !u!1 &1004435178
 GameObject:
@@ -12950,6 +12951,7 @@ MonoBehaviour:
   warningPanel: {fileID: 1516396876}
   timerText: {fileID: 271337375}
   callSupportButton: {fileID: 2031199256}
+  showDelay: 1.5
 --- !u!4 &1836176866
 Transform:
   m_ObjectHideFlags: 0

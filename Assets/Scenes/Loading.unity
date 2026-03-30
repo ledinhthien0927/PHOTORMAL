@@ -1252,8 +1252,8 @@ MonoBehaviour:
   supportCallSource: {fileID: 69333485}
   footstepSource: {fileID: 163682527}
   knockDoorSource: {fileID: 1316403559}
-  defaultMusicVolume: 0
-  defaultSFXVolume: 0.8
+  defaultMusicVolume: 0.8
+  defaultSFXVolume: 0.5
 --- !u!4 &1209110013
 Transform:
   m_ObjectHideFlags: 0
