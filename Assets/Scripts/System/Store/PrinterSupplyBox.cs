@@ -34,13 +34,6 @@ public sealed class PrinterSupplyBox : MonoBehaviour, IInteractable
         if (!CanInteract(interactor))
             return;
 
-        PlayerInventory inventory = interactor.Inventory as PlayerInventory;
-
-        if (inventory != null)
-        {
-            inventory.TryDrop(out GameObject obj);
-        }
-
         if (supplyType == SupplyType.Paper)
         {
             PrinterSupplyData.Instance.AddPaper(amount);
