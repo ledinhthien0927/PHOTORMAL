@@ -64,6 +64,7 @@ public class CustomerController : MonoBehaviour, IInteractable
     private bool notifiedReady;
     private bool hasPhotoTaken;
     private bool listeningPhotoEvent;
+    private bool isInvitePromptVisible;
 
     private Coroutine enterFlowRoutine;
     private Coroutine exitFlowRoutine;
@@ -279,7 +280,7 @@ public class CustomerController : MonoBehaviour, IInteractable
             hasPhotoTaken = false;
             NotifyReady(true);
             StartListeningPhotoCaptured();
-            
+
             if (willTriggerFlicker)
             {
                 StartCoroutine(FlickerTimerRoutine());
@@ -374,11 +375,9 @@ public class CustomerController : MonoBehaviour, IInteractable
 
     private IEnumerator FlickerTimerRoutine()
     {
-        // Chờ từ 1 đến 3 giây
         float waitTime = Random.Range(1f, 3f);
         yield return new WaitForSeconds(waitTime);
-        
-        // Kích hoạt sự kiện chớp đèn nếu có sự kiện này trong game
+
         if (EventManager.Instance != null)
         {
             Debug.Log($"[CustomerController] {name} is triggering the FlickerLight event while waiting!");
@@ -416,10 +415,38 @@ public class CustomerController : MonoBehaviour, IInteractable
             popupAnchor
         );
 
+        isInvitePromptVisible = false;
+
         popupInstance.Show(currentOrder, () =>
         {
             Interact();
         });
+    }
+
+    public void SetInvitePromptVisible(bool visible)
+    {
+        if (state != CustomerState.WaitingPickupAtPC)
+            return;
+
+        if (popupInstance == null)
+            return;
+
+        if (isInvitePromptVisible == visible)
+            return;
+
+        isInvitePromptVisible = visible;
+
+        if (visible)
+        {
+            popupInstance.Hide();
+        }
+        else
+        {
+            popupInstance.Show(currentOrder, () =>
+            {
+                Interact();
+            });
+        }
     }
 
     public void Interact()
@@ -428,6 +455,8 @@ public class CustomerController : MonoBehaviour, IInteractable
         {
             if (popupInstance != null)
                 popupInstance.Hide();
+
+            isInvitePromptVisible = false;
 
             state = CustomerState.GoingToPhotoSpot;
             MoveTo(photoSpot.position);
@@ -570,6 +599,8 @@ public class CustomerController : MonoBehaviour, IInteractable
         if (popupInstance != null)
             popupInstance.Hide();
 
+        isInvitePromptVisible = false;
+
         if (exitPoint == null)
         {
             FinishAndDestroy();
@@ -681,7 +712,6 @@ public class CustomerController : MonoBehaviour, IInteractable
         if (popupPrefab == null || popupAnchor == null)
             return;
 
-        
         if (currentOrder.quantity <= 0)
             return;
 

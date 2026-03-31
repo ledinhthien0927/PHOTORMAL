@@ -7,7 +7,7 @@ public sealed class PrinterSupplyBox : MonoBehaviour, IInteractable
         Paper,
         Ink
     }
-
+     
     [Header("Supply")]
     [SerializeField] private SupplyType supplyType;
     [SerializeField] private float amount = 10f;

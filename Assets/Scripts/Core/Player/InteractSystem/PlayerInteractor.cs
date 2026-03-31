@@ -3,11 +3,11 @@ using UnityEngine;
 public sealed class PlayerInteractor : MonoBehaviour, IInteractor
 {
     [Header("Detection Settings")]
-    [SerializeField] private float distance = 3f;              // Maximum interaction distance
-    [SerializeField] private float sphereRadius = 0.08f;       // SphereCast radius (more stable than Raycast)
-    [SerializeField] private float graceTime = 0.12f;          // Time to keep target after temporary loss
-    [SerializeField] private float enterRange = 2.9f;          // Distance required to show prompt
-    [SerializeField] private float exitRange = 3.1f;           // Distance required to hide prompt
+    [SerializeField] private float distance = 3f;
+    [SerializeField] private float sphereRadius = 0.08f;
+    [SerializeField] private float graceTime = 0.12f;
+    [SerializeField] private float enterRange = 2.9f;
+    [SerializeField] private float exitRange = 3.1f;
     [SerializeField] private Camera cam;
     [SerializeField] private LayerMask interactMask = ~0;
 
@@ -18,12 +18,12 @@ public sealed class PlayerInteractor : MonoBehaviour, IInteractor
     private IInteractable currentTarget;
     private float lastSeenTime;
     private float lastSeenDistance;
+    private CustomerController currentCustomerForPopup;
 
     public Transform Transform => transform;
     public Transform HoldPoint => holdPoint;
     public IInventory Inventory => inventory;
 
-    // Cached check to avoid repeated null checks
     private bool IsPhotoMode =>
         StudioManager.Instance != null &&
         StudioManager.Instance.CurrentMode == StudioManager.Mode.PhotoMode;
@@ -36,8 +36,6 @@ public sealed class PlayerInteractor : MonoBehaviour, IInteractor
 
     private void Update()
     {
-        // JDD: when in PhotoMode, you usually don't want world interaction prompts flickering on screen
-        // (You can still allow it if you want, but default JDD flow is shoot-only in the fixed spot.)
         if (!IsPhotoMode)
             UpdateTarget();
         else
@@ -46,6 +44,12 @@ public sealed class PlayerInteractor : MonoBehaviour, IInteractor
 
     private void ClearTargetAndUI()
     {
+        if (currentCustomerForPopup != null)
+        {
+            currentCustomerForPopup.SetInvitePromptVisible(false);
+            currentCustomerForPopup = null;
+        }
+
         if (currentTarget != null)
         {
             currentTarget = null;
@@ -102,28 +106,69 @@ public sealed class PlayerInteractor : MonoBehaviour, IInteractor
 
         if (newTarget != currentTarget)
         {
+            if (currentCustomerForPopup != null)
+            {
+                currentCustomerForPopup.SetInvitePromptVisible(false);
+                currentCustomerForPopup = null;
+            }
+
             currentTarget = newTarget;
 
             if (currentTarget != null)
+            {
                 UIManager.Instance.ShowTextItem(currentTarget.Prompt);
+
+                CustomerController customer = currentTarget as CustomerController;
+                if (customer != null && customer.Prompt == "Invite to studio")
+                {
+                    currentCustomerForPopup = customer;
+                    currentCustomerForPopup.SetInvitePromptVisible(true);
+                }
+            }
             else
+            {
                 UIManager.Instance.HideTextItem();
+            }
         }
         else if (currentTarget != null && currentTarget.CanInteract(this))
         {
-            // Update the prompt text continuously so changes (like toggling a switch) reflect instantly
             UIManager.Instance.ShowTextItem(currentTarget.Prompt);
+
+            CustomerController customer = currentTarget as CustomerController;
+            if (customer != null && customer.Prompt == "Invite to studio")
+            {
+                if (currentCustomerForPopup != customer)
+                {
+                    if (currentCustomerForPopup != null)
+                        currentCustomerForPopup.SetInvitePromptVisible(false);
+
+                    currentCustomerForPopup = customer;
+                    currentCustomerForPopup.SetInvitePromptVisible(true);
+                }
+            }
+            else
+            {
+                if (currentCustomerForPopup != null)
+                {
+                    currentCustomerForPopup.SetInvitePromptVisible(false);
+                    currentCustomerForPopup = null;
+                }
+            }
         }
         else if (currentTarget != null && !currentTarget.CanInteract(this))
         {
             UIManager.Instance.HideTextItem();
+
+            if (currentCustomerForPopup != null)
+            {
+                currentCustomerForPopup.SetInvitePromptVisible(false);
+                currentCustomerForPopup = null;
+            }
         }
     }
 
-    // UI button: Pickup / Use (mobile shared button)
     public void OnPickupButton()
     {
-        // Only lock the button to SHOOT when inside PhotoMode
         if (IsPhotoMode && IsHoldingCameraItem)
         {
             var usable = inventory.CurrentObject.GetComponent<IUsable>();
@@ -131,14 +176,12 @@ public sealed class PlayerInteractor : MonoBehaviour, IInteractor
             return;
         }
 
-        // Outside PhotoMode: allow normal world interaction even while holding camera
         if (currentTarget != null && currentTarget.CanInteract(this))
         {
             currentTarget.Interact(this);
             return;
         }
 
-        // If no world target, then try using held item (optional)
         if (inventory.HasItem)
         {
             var usable = inventory.CurrentObject.GetComponent<IUsable>();
@@ -146,10 +189,8 @@ public sealed class PlayerInteractor : MonoBehaviour, IInteractor
         }
     }
 
-    // UI button: Drop held item
     public void OnDropButton()
     {
-        // Optional JDD rule: prevent dropping the camera while in PhotoMode (feels better)
         if (IsPhotoMode) return;
 
         if (!inventory.TryDrop(out GameObject obj)) return;
