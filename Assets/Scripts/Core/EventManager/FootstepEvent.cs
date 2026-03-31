@@ -3,8 +3,6 @@ using System.Collections;
 
 public class FootstepEvent : MonoBehaviour, IGameEvent
 {
-    [SerializeField] private float duration = 15f;
-
     public void Execute()
     {
         StartCoroutine(FootstepRoutine());
@@ -18,6 +16,8 @@ public class FootstepEvent : MonoBehaviour, IGameEvent
         // Gọi API để Coder B phát âm thanh tiếng bước chân
         GameEventAPI.OnFootstepToggled?.Invoke(true);
 
+        // Lấy thời gian duration trực tiếp từ RuleManager
+        float duration = RuleManager.Instance != null ? RuleManager.Instance.footstepGracePeriod : 15f;
         yield return new WaitForSeconds(duration);
 
         RuleContext.Instance.IsFootstepActive = false;

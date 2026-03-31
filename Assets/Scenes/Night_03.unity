@@ -4503,8 +4503,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   customerServiceTimeLimit: 45
   backDoorGracePeriod: 5
-  footstepGracePeriod: 10
-  twinsGracePeriod: 10
+  footstepGracePeriod: 15
+  twinsGracePeriod: 5
   clownGracePeriod: 19
   clownTimerText: {fileID: 0}
   serviceCountdown: 0
@@ -4512,6 +4512,9 @@ MonoBehaviour:
   footstepCountdown: 0
   twinsCountdown: 0
   clownCountdown: 0
+  footstepHideTimeLimit: 10
+  currentFootstepTimer: 0
+  hasEnteredToiletDuringFootstep: 0
 --- !u!114 &525386651
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5354,7 +5357,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 241666ef696fa9d459e01ae6130e1c54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  duration: 8
 --- !u!114 &660994251
 MonoBehaviour:
   m_ObjectHideFlags: 0

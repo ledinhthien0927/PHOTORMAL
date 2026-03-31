@@ -21,7 +21,10 @@ public class RuleManager : MonoBehaviour
     [Header("Rule Settings")]
     [SerializeField] private float customerServiceTimeLimit = 60f;
     [SerializeField] private float backDoorGracePeriod = 10f;
-    [SerializeField] private float footstepGracePeriod = 5f;
+    // THỜI GIAN XUẤT HIỆN TIẾNG BƯỚC CHÂN (TỔNG THỜI GIAN ÂM THANH PLAY)
+    [Tooltip("Thời gian xuất hiện tiếng bước chân (VD: 15s)")]
+    public float footstepGracePeriod = 15f; 
+    
     [SerializeField] private float twinsGracePeriod = 5f;
     [SerializeField] private float clownGracePeriod = 5f; // Đếm ngược 5s cho hề
 
@@ -41,12 +44,17 @@ public class RuleManager : MonoBehaviour
     // Lưu tạm thời gian mở cửa giao hàng để đếm ngược bắt lỗi
     private float backDoorOpenTimer = 0f;
 
-    // Lưu tạm thời gian vi phạm tiếng bước chân (người chơi có 5s để vào WC)
-    private float footstepViolationTimer = 0f;
+    // THỜI GIAN ĐẾM NGƯỢC (THỜI GIAN CHO PHÉP PLAYER VÀO WC)
+    [Tooltip("Thời gian cho phép player đi vô WC từ lúc tiếng chân bắt đầu (VD: 5s)")]
+    [SerializeField] private float footstepHideTimeLimit = 5f; 
+    
+    // Bộ đếm thật sự chạy bằng Time.deltaTime
+    [SerializeField] private float currentFootstepTimer = 0f;
+    [SerializeField] private bool hasEnteredToiletDuringFootstep = false;
 
     // Lưu tạm thời gian vi phạm sinh đôi (người chơi có 5s để tắt đèn)
     private float twinsViolationTimer = 0f;
-    private bool hasEnteredToiletDuringFootstep = false;
+    private bool lastFootstepActive = false; // Mới: theo dõi trạng thái frame trước của tiếng bước chân
 
     private void Awake()
     {
@@ -96,7 +104,7 @@ public class RuleManager : MonoBehaviour
         activeRules.Clear();
         clownPatienceTimer = 0f;
         backDoorOpenTimer = 0f;
-        footstepViolationTimer = 0f;
+        currentFootstepTimer = 0f;
         twinsViolationTimer = 0f;
         hasEnteredToiletDuringFootstep = false;
 
@@ -262,50 +270,70 @@ public class RuleManager : MonoBehaviour
     /// <summary> Quy tắc: Vào WC khi có tiếng chân </summary>
     private void CheckFootstep()
     {
+        // Debug Support: Nếu chưa có rule nào được thiết lập (thường khi test F5 bằng tay), tự nạp Rule Đêm 1
+        if (activeRules.Count == 0 && RuleContext.Instance.IsFootstepActive)
+        {
+            Debug.LogWarning("[RuleManager] No rules found! Auto-initializing Night 1 rules for debugging.");
+            SetupRules(1);
+        }
+
         if (!activeRules.Contains(RuleType.HideWhenFootstep)) return;
 
-        if (!RuleContext.Instance.IsFootstepActive)
-        {
-            footstepViolationTimer = 0f;
-            footstepCountdown = 0f;
-            hasEnteredToiletDuringFootstep = false;
-            return;
-        }
+        bool currentlyActive = RuleContext.Instance.IsFootstepActive;
 
-        if (RuleContext.Instance.IsPlayerInToilet)
+        if (currentlyActive)
         {
-            // Người chơi đã vào WC thành công -> Đánh dấu & reset timer đếm ngược
-            hasEnteredToiletDuringFootstep = true;
-            footstepViolationTimer = 0f;
-            footstepCountdown = 0f;
-        }
-        else
-        {
-            // Người chơi đang ở ngoài trong khi tiếng chân vẫn vang lên
-            if (hasEnteredToiletDuringFootstep)
+            // Tăng bộ đếm thời gian từ lúc bắt đầu tiếng bước chân
+            currentFootstepTimer += Time.deltaTime;
+            
+            // Debug Inspector (Hiển thị thời gian còn lại ĐỂ TRỐN, tính bằng HideTimeLimit trừ đi Timer)
+            footstepCountdown = Mathf.Max(0, footstepHideTimeLimit - currentFootstepTimer);
+
+            if (RuleContext.Instance.IsPlayerInToilet)
             {
-                // Đã vào rồi mà bỏ ra sớm -> Phạt MỘT LỖI ngay lập tức
-                BreakRule(RuleType.HideWhenFootstep);
-                RuleContext.Instance.IsFootstepActive = false; // Ngừng đếm để không bị phạt liên tiếp
-                footstepViolationTimer = 0f;
-                footstepCountdown = 0f;
-                hasEnteredToiletDuringFootstep = false;
+                // Người chơi đã vào WC thành công trong khoảng thời gian cho phép
+                hasEnteredToiletDuringFootstep = true;
             }
             else
             {
-                // Chưa vào WC lần nào -> Đếm thời gian Grace Period
-                footstepViolationTimer += Time.deltaTime;
-                footstepCountdown = footstepGracePeriod - footstepViolationTimer;
-
-                if (footstepViolationTimer >= footstepGracePeriod)
+                if (hasEnteredToiletDuringFootstep)
                 {
+                    // Vừa vào nấp mà lại chui ra giữa chừng khi tiếng chân vẫn còn -> Phạt ngay lập tức
+                    Debug.LogWarning("[RuleManager] Rule Broken: Player LEFT toilet while footsteps are still active!");
                     BreakRule(RuleType.HideWhenFootstep);
+
                     RuleContext.Instance.IsFootstepActive = false; 
-                    footstepViolationTimer = 0f;
-                    footstepCountdown = 0f;
+                    currentlyActive = false; 
+                    currentFootstepTimer = 0f; 
+                    hasEnteredToiletDuringFootstep = false;
+                }
+                else
+                {
+                    // CHƯA VÀO WC LẦN NÀO - Bắt đầu kiểm tra xem đã hết thời gian ẩn nấp cho phép chưa (Vd 5s)
+                    if (currentFootstepTimer >= footstepHideTimeLimit)
+                    {
+                        Debug.LogWarning("[RuleManager] Rule Broken: Timeout! Player FAILED to enter toilet within allowed time limit!");
+                        BreakRule(RuleType.HideWhenFootstep);
+                        
+                        RuleContext.Instance.IsFootstepActive = false;
+                        currentlyActive = false;
+                        currentFootstepTimer = 0f;
+                        hasEnteredToiletDuringFootstep = false;
+                    }
                 }
             }
         }
+
+        // XỬ LÝ CHUYỂN ĐỔI: Khi tiếng bước chân kết thúc bản thân nó
+        if (lastFootstepActive && !currentlyActive)
+        {
+            // Đã hết sự kiện tiếng chân an toàn -> Reset các giá trị debug
+            currentFootstepTimer = 0f;
+            footstepCountdown = 0f;
+            hasEnteredToiletDuringFootstep = false;
+        }
+
+        lastFootstepActive = currentlyActive;
     }
 
     private void CheckTwinsLight()

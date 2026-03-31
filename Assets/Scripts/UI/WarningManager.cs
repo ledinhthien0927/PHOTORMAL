@@ -55,9 +55,14 @@ public class WarningManager : MonoBehaviour, IGameEvent
         StopAllCoroutines();
     }
 
+    private Coroutine activeWarningRoutine;
+
     public void ShowWarning()
     {
-        StartCoroutine(ShowWarningRoutine());
+        if (activeWarningRoutine == null)
+        {
+            activeWarningRoutine = StartCoroutine(ShowWarningRoutine());
+        }
     }
 
     private IEnumerator ShowWarningRoutine()
@@ -88,6 +93,7 @@ public class WarningManager : MonoBehaviour, IGameEvent
             {
                 isWarningActive = false;
                 warningPanel.SetActive(false);
+                activeWarningRoutine = null; // Clear the routine reference
                 
                 // Stop the ringing audio before firing the Game Over event
                 if (AudioManager.Instance != null)
@@ -106,8 +112,10 @@ public class WarningManager : MonoBehaviour, IGameEvent
         {
             isWarningActive = false;
             warningPanel.SetActive(false);
-            Debug.Log("Đã gọi Support kịp thời. Thoát nạn.");
+            activeWarningRoutine = null; // Clear the routine reference
             
+            Debug.Log("Đã gọi Support kịp thời. Thoát nạn.");
+
             if (AudioManager.Instance != null)
             {
                 AudioManager.Instance.StopSupportCall();

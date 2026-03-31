@@ -4936,7 +4936,7 @@ MonoBehaviour:
   customerServiceTimeLimit: 45
   backDoorGracePeriod: 5
   footstepGracePeriod: 10
-  twinsGracePeriod: 10
+  twinsGracePeriod: 5
   clownGracePeriod: 19
   clownTimerText: {fileID: 0}
   serviceCountdown: 0

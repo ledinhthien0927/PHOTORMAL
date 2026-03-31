@@ -9,8 +9,8 @@ public class EventManager : MonoBehaviour
     [SerializeField] private float minDelay = 5f;
     [SerializeField] private float maxDelay = 12f;
 
-    private Dictionary<string, IGameEvent> events =
-        new Dictionary<string, IGameEvent>();
+    private Dictionary<string, List<IGameEvent>> events =
+        new Dictionary<string, List<IGameEvent>>();
 
     private bool isRunning;
 
@@ -28,15 +28,27 @@ public class EventManager : MonoBehaviour
     public void RegisterEvent(string id, IGameEvent gameEvent)
     {
         if (!events.ContainsKey(id))
-            events.Add(id, gameEvent);
+            events.Add(id, new List<IGameEvent>());
+
+        if (!events[id].Contains(gameEvent))
+            events[id].Add(gameEvent);
     }
 
     public void TriggerEvent(string id)
     {
         if (events.ContainsKey(id))
-            events[id].Execute();
+        {
+            // Tạo list tạm để duyệt tránh lỗi "Collection was modified" nếu Execute gọi ngược lại Register/Unregister
+            List<IGameEvent> currentEvents = new List<IGameEvent>(events[id]);
+            foreach (var gameEvent in currentEvents)
+            {
+                if (gameEvent != null) gameEvent.Execute();
+            }
+        }
         else
+        {
             Debug.LogWarning("Event not found: " + id);
+        }
     }
 
     IEnumerator EventLoop()
