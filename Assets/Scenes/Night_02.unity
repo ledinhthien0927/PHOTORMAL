@@ -4936,6 +4936,7 @@ MonoBehaviour:
   customerServiceTimeLimit: 45
   backDoorGracePeriod: 5
   footstepGracePeriod: 10
+  footstepHideTimeLimit: 6
   twinsGracePeriod: 5
   clownGracePeriod: 19
   clownTimerText: {fileID: 0}
@@ -4944,6 +4945,8 @@ MonoBehaviour:
   footstepCountdown: 0
   twinsCountdown: 0
   clownCountdown: 0
+  currentFootstepTimer: 0
+  hasEnteredToiletDuringFootstep: 0
 --- !u!114 &525386651
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4982,6 +4985,7 @@ MonoBehaviour:
   customerServiceTimeLimit: 45
   backDoorGracePeriod: 5
   footstepGracePeriod: 5
+  footstepHideTimeLimit: 5
   twinsGracePeriod: 10
   clownGracePeriod: 19
   clownTimerText: {fileID: 0}
@@ -4990,6 +4994,8 @@ MonoBehaviour:
   footstepCountdown: 0
   twinsCountdown: 0
   clownCountdown: 0
+  currentFootstepTimer: 0
+  hasEnteredToiletDuringFootstep: 0
 --- !u!1 &528983783
 GameObject:
   m_ObjectHideFlags: 0
@@ -5293,6 +5299,7 @@ GameObject:
   - component: {fileID: 545595361}
   - component: {fileID: 545595360}
   - component: {fileID: 545595359}
+  - component: {fileID: 545595362}
   m_Layer: 5
   m_Name: Restart
   m_TagString: Untagged
@@ -5414,6 +5421,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 545595357}
   m_CullTransparentMesh: 1
+--- !u!114 &545595362
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 545595357}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0be19280f35aec44087121ead65a4771, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &547618769
 GameObject:
   m_ObjectHideFlags: 0
@@ -5837,7 +5856,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 241666ef696fa9d459e01ae6130e1c54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  duration: 8
 --- !u!114 &660994251
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10944,6 +10962,7 @@ GameObject:
   - component: {fileID: 1535171918}
   - component: {fileID: 1535171917}
   - component: {fileID: 1535171916}
+  - component: {fileID: 1535171919}
   m_Layer: 5
   m_Name: Menu
   m_TagString: Untagged
@@ -11065,6 +11084,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1535171914}
   m_CullTransparentMesh: 1
+--- !u!114 &1535171919
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1535171914}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0be19280f35aec44087121ead65a4771, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1537087411
 GameObject:
   m_ObjectHideFlags: 0
@@ -14584,7 +14615,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.0010262, y: -111}
+  m_AnchoredPosition: {x: -0.0000052365, y: -210}
   m_SizeDelta: {x: 329.92, y: 82.5939}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2099995203

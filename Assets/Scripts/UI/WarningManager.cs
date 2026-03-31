@@ -120,6 +120,9 @@ public class WarningManager : MonoBehaviour, IGameEvent
             {
                 AudioManager.Instance.StopSupportCall();
             }
+
+            // Mới: Dừng luôn cả tiếng bước chân và logic associated
+            GameEventAPI.OnForceStopFootstep?.Invoke();
         }
     }
 }

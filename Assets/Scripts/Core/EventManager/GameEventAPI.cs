@@ -63,6 +63,9 @@ public static class GameEventAPI
     /// Sự kiện: Bắt đầu/Kết thúc tiếng bước chân
     public static Action<bool> OnFootstepToggled;
 
+    /// Yêu cầu hệ thống dừng tiếng bước chân ngay lập tức (khi Call Support)
+    public static Action OnForceStopFootstep;
+
     /// Sự kiện: Tên hề xuất hiện ở cửa sau
     public static Action OnClownAppeared;
 

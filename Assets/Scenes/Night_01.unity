@@ -4257,6 +4257,7 @@ MonoBehaviour:
   customerServiceTimeLimit: 45
   backDoorGracePeriod: 5
   footstepGracePeriod: 10
+  footstepHideTimeLimit: 6
   twinsGracePeriod: 5
   clownGracePeriod: 19
   clownTimerText: {fileID: 0}
@@ -4265,6 +4266,8 @@ MonoBehaviour:
   footstepCountdown: 0
   twinsCountdown: 0
   clownCountdown: 0
+  currentFootstepTimer: 0
+  hasEnteredToiletDuringFootstep: 0
 --- !u!114 &525386651
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4906,7 +4909,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 241666ef696fa9d459e01ae6130e1c54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  duration: 8
 --- !u!114 &660994251
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14433,7 +14435,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!23 &2415924169312583373
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -16424,7 +16426,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.0010262, y: -111}
+  m_AnchoredPosition: {x: -0.00096238975, y: -215}
   m_SizeDelta: {x: 329.92, y: 82.5939}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &6464325328368923250

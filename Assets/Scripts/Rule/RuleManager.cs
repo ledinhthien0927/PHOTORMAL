@@ -24,6 +24,9 @@ public class RuleManager : MonoBehaviour
     // THỜI GIAN XUẤT HIỆN TIẾNG BƯỚC CHÂN (TỔNG THỜI GIAN ÂM THANH PLAY)
     [Tooltip("Thời gian xuất hiện tiếng bước chân (VD: 15s)")]
     public float footstepGracePeriod = 15f; 
+    // THỜI GIAN ĐẾM NGƯỢC (THỜI GIAN CHO PHÉP PLAYER VÀO WC)
+    [Tooltip("Thời gian cho phép player đi vô WC từ lúc tiếng chân bắt đầu (VD: 5s)")]
+    [SerializeField] private float footstepHideTimeLimit = 5f; 
     
     [SerializeField] private float twinsGracePeriod = 5f;
     [SerializeField] private float clownGracePeriod = 5f; // Đếm ngược 5s cho hề
@@ -35,6 +38,7 @@ public class RuleManager : MonoBehaviour
     public float serviceCountdown;
     [SerializeField] private float backDoorCountdown;
     [SerializeField] private float footstepCountdown;
+    
     [SerializeField] private float twinsCountdown;
     [SerializeField] private float clownCountdown;
     
@@ -44,13 +48,12 @@ public class RuleManager : MonoBehaviour
     // Lưu tạm thời gian mở cửa giao hàng để đếm ngược bắt lỗi
     private float backDoorOpenTimer = 0f;
 
-    // THỜI GIAN ĐẾM NGƯỢC (THỜI GIAN CHO PHÉP PLAYER VÀO WC)
-    [Tooltip("Thời gian cho phép player đi vô WC từ lúc tiếng chân bắt đầu (VD: 5s)")]
-    [SerializeField] private float footstepHideTimeLimit = 5f; 
+    
     
     // Bộ đếm thật sự chạy bằng Time.deltaTime
     [SerializeField] private float currentFootstepTimer = 0f;
     [SerializeField] private bool hasEnteredToiletDuringFootstep = false;
+    private bool hasPenalizedFootstepTimeout = false; // Mới: Theo dõi lỗi timeout hoặc lỗi rời WC
 
     // Lưu tạm thời gian vi phạm sinh đôi (người chơi có 5s để tắt đèn)
     private float twinsViolationTimer = 0f;
@@ -107,6 +110,7 @@ public class RuleManager : MonoBehaviour
         currentFootstepTimer = 0f;
         twinsViolationTimer = 0f;
         hasEnteredToiletDuringFootstep = false;
+        hasPenalizedFootstepTimeout = false;
 
         // Đêm 1
         activeRules.Add(RuleType.NoFlickerShoot);
@@ -291,34 +295,31 @@ public class RuleManager : MonoBehaviour
 
             if (RuleContext.Instance.IsPlayerInToilet)
             {
-                // Người chơi đã vào WC thành công trong khoảng thời gian cho phép
+                // Người chơi đã vào WC thành công trong khoảng thời gian cho phép hoặc quay lại
                 hasEnteredToiletDuringFootstep = true;
+                hasPenalizedFootstepTimeout = false; // Reset trạng thái lỗi để có thể bị phạt lại nếu ra ngoài lần nữa
             }
             else
             {
                 if (hasEnteredToiletDuringFootstep)
                 {
-                    // Vừa vào nấp mà lại chui ra giữa chừng khi tiếng chân vẫn còn -> Phạt ngay lập tức
+                    // VỪA RA KHỎI WC: Phạt ngay lập tức vì tiếng chân vẫn còn
                     Debug.LogWarning("[RuleManager] Rule Broken: Player LEFT toilet while footsteps are still active!");
                     BreakRule(RuleType.HideWhenFootstep);
 
-                    RuleContext.Instance.IsFootstepActive = false; 
-                    currentlyActive = false; 
-                    currentFootstepTimer = 0f; 
+                    // Đánh dấu đã ra ngoài và đã bị phạt cho hành động này
                     hasEnteredToiletDuringFootstep = false;
+                    hasPenalizedFootstepTimeout = true; 
                 }
                 else
                 {
-                    // CHƯA VÀO WC LẦN NÀO - Bắt đầu kiểm tra xem đã hết thời gian ẩn nấp cho phép chưa (Vd 5s)
-                    if (currentFootstepTimer >= footstepHideTimeLimit)
+                    // CHƯA VÀO WC (HOẶC ĐÃ RA): Kiểm tra timeout nếu chưa bị phạt
+                    if (currentFootstepTimer >= footstepHideTimeLimit && !hasPenalizedFootstepTimeout)
                     {
-                        Debug.LogWarning("[RuleManager] Rule Broken: Timeout! Player FAILED to enter toilet within allowed time limit!");
+                        Debug.LogWarning("[RuleManager] Rule Broken: Timeout or Outside! Player exposed while footsteps are active!");
                         BreakRule(RuleType.HideWhenFootstep);
                         
-                        RuleContext.Instance.IsFootstepActive = false;
-                        currentlyActive = false;
-                        currentFootstepTimer = 0f;
-                        hasEnteredToiletDuringFootstep = false;
+                        hasPenalizedFootstepTimeout = true;
                     }
                 }
             }
@@ -331,6 +332,7 @@ public class RuleManager : MonoBehaviour
             currentFootstepTimer = 0f;
             footstepCountdown = 0f;
             hasEnteredToiletDuringFootstep = false;
+            hasPenalizedFootstepTimeout = false;
         }
 
         lastFootstepActive = currentlyActive;
