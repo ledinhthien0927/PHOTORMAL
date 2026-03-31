@@ -132,6 +132,9 @@ public class PopupManager : MonoBehaviour, IGameEvent
         string currentSceneName = SceneManager.GetActiveScene().name;
         Debug.Log($"[PopupManager] Restarting Level: {currentSceneName}");
 
+        // Mới: Đảm bảo không load lại bối cảnh cũ khi restart
+        SaveSystem.pendingLoadData = null;
+
         if (GameProgress.Instance != null)
         {
             GameProgress.Instance.ResetNightData();
@@ -145,18 +148,15 @@ public class PopupManager : MonoBehaviour, IGameEvent
     {
         Debug.Log($"[PopupManager] Loading Main Menu: {mainMenuSceneName}");
         
+        // Kiểm tra xem có đang ở màn hình Game Over không
+        bool hasLost = (gameOverPopup != null && gameOverPopup.activeSelf) || 
+                       (clownGameOverPopup != null && clownGameOverPopup.activeSelf);
+
+        // Mới: Lưu lại tiến trình trước khi thoát ra ngoài menu
+        // Nếu đã thua, ép bộ lưu quay về trạng thái đầu đêm (forceReset = true)
+        SaveSystem.SaveGame(forceReset: hasLost);
+
         ResumeTime();
-
-        string currentSceneName = SceneManager.GetActiveScene().name;
-        // Bắt trường hợp người chơi bấm nút "Trở về Main Menu" hoặc "Continue" trên bảng Win của màn 3
-        if (currentSceneName == "Night_03" && winNightPopup != null && winNightPopup.activeSelf)
-        {
-            Debug.Log("[PopupManager] Finished Level 3 (from GoToMainMenu)! Returning to Main Menu...");
-            PlayerPrefs.SetInt("GameComplete", 1);
-            PlayerPrefs.Save();
-            SaveSystem.ClearSave();
-        }
-
         SceneManager.LoadScene(mainMenuSceneName);
     }
 
@@ -191,8 +191,8 @@ public class PopupManager : MonoBehaviour, IGameEvent
             }
 
             // Save progress when transitioning to next night
-            SaveSystem.SaveNight(nextNightNum);
-            Debug.Log($"[PopupManager] SaveSystem.SaveNight({nextNightNum}) called.");
+            SaveSystem.SaveGame();
+            Debug.Log("[PopupManager] SaveSystem.SaveGame() called.");
             
             // Tên scene theo định dạng Night_01, Night_02...
             string nextSceneName = "Night_0" + nextNightNum;

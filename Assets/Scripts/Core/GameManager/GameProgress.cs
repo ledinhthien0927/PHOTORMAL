@@ -126,11 +126,30 @@ public class GameProgress : MonoBehaviour
         OnNightChanged?.Invoke(CurrentNight);
     }
 
-    public void SetNight(int night)
+    public void SetNight(int night, bool resetData = true)
     {
         CurrentNight = night;
-        ResetNightData();
+        if (resetData) ResetNightData();
         OnNightChanged?.Invoke(CurrentNight);
+    }
+
+    public void LoadFromSaveData(SaveData data)
+    {
+        CurrentNight = data.night;
+        CurrentMoney = data.money;
+        CurrentError = data.errors;
+        
+        // Restore RuleContext Flags
+        if (RuleContext.Instance != null)
+        {
+            RuleContext.Instance.IsLivingRoomLightOn = data.isLivingRoomLightOn;
+            RuleContext.Instance.IsBackDoorLocked = data.isBackDoorLocked;
+            RuleContext.Instance.IsDeliveryWaiting = data.isDeliveryWaiting;
+        }
+
+        OnNightChanged?.Invoke(CurrentNight);
+        OnMoneyChanged?.Invoke(CurrentMoney);
+        OnErrorChanged?.Invoke(CurrentError);
     }
 
     public void SetMoney(int money)

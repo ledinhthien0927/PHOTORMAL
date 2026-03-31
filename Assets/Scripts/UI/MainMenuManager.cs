@@ -55,6 +55,24 @@ public class MainMenuManager : MonoBehaviour
         }
     }
 
+    public void OnNoClicked()
+    {
+        Debug.Log("[MainMenuManager] No Clicked! Restarting night from baseline.");
+        SaveSystem.pendingLoadData = null; // Quên bối cảnh đang đứng và doanh thu
+        
+        if (SaveSystem.HasSave())
+        {
+            int savedNight = SaveSystem.LoadNight();
+            LoadNight(savedNight, true); // Load đêm gần nhất nhưng reset data
+        }
+        else
+        {
+            OnRestartClicked();
+        }
+
+        if (questPanel != null) questPanel.SetActive(false);
+    }
+
     public void OnContinueClicked()
     {
         Debug.Log("[MainMenuManager] Continue Clicked!");
@@ -62,8 +80,17 @@ public class MainMenuManager : MonoBehaviour
         {
             SaveData data = SaveSystem.LoadGame();
             SaveSystem.pendingLoadData = data; 
-            Debug.Log($"[MainMenuManager] Save found! Saved Night: {data.night}");
-            LoadNight(data.night);
+            
+            // Mới: Load ngay dữ liệu vào GameProgress trước khi chuyển scene
+            if (GameProgress.Instance != null)
+            {
+                GameProgress.Instance.LoadFromSaveData(data);
+            }
+
+            Debug.Log($"[MainMenuManager] Continue! Night: {data.night}, Money: {data.money}");
+            
+            // Gọi LoadNight với resetData = false để không xóa tiền vừa nạp
+            LoadNight(data.night, false);
         }
         else
         {
@@ -75,18 +102,19 @@ public class MainMenuManager : MonoBehaviour
     public void OnRestartClicked()
     {
         Debug.Log("[MainMenuManager] Restart Clicked!");
+        SaveSystem.pendingLoadData = null; // Quên bối cảnh
         SaveSystem.ClearSave();
         LoadNight(1);
     }
 
     // --- Helper Logic ---
 
-    private void LoadNight(int night)
+    private void LoadNight(int night, bool resetData = true)
     {
-        Debug.Log($"[MainMenuManager] LoadNight called with Night: {night}");
+        Debug.Log($"[MainMenuManager] LoadNight called with Night: {night}, Reset: {resetData}");
         if (GameProgress.Instance != null)
         {
-            GameProgress.Instance.SetNight(night);
+            GameProgress.Instance.SetNight(night, resetData);
             Debug.Log($"[MainMenuManager] GameProgress updated to Night: {GameProgress.Instance.CurrentNight}");
         }
         else

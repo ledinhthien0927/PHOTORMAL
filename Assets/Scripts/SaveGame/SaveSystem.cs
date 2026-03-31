@@ -1,17 +1,35 @@
 using UnityEngine;
 using System.IO;
+using System.Collections.Generic;
+
+[System.Serializable]
+public struct ObjectState
+{
+    public string name;
+    public bool state; // true = Open/On, false = Closed/Off
+}
 
 [System.Serializable]
 public class SaveData
 {
     public int night = 1;
     public int money = 0;
+    public int errors = 0; 
     
+    // Rule Context Flags
+    public bool isLivingRoomLightOn;
+    public bool isBackDoorLocked;
+    public bool isDeliveryWaiting;
+
+    // Environmental States
+    public List<ObjectState> envStates = new List<ObjectState>();
+
     // Player Position
+    public bool hasPosition = false; // Mới: Để biết có cần teleport không
     public float pX, pY, pZ;
     public float rotY;
 
-    // Optional: add timestamp or other meta
+    // Meta
     public string saveTime;
 }
 
@@ -20,9 +38,9 @@ public static class SaveSystem
     private static readonly string FileName = "photormal_save.json";
     private static string SavePath => Path.Combine(Application.persistentDataPath, FileName);
 
-    public static SaveData pendingLoadData; // Mới: Lưu data để chờ scene load xong thì vứt vô player
+    public static SaveData pendingLoadData;
 
-    public static void SaveGame()
+    public static void SaveGame(bool forceReset = false)
     {
         SaveData data = new SaveData();
 
@@ -30,30 +48,66 @@ public static class SaveSystem
         if (GameProgress.Instance != null)
         {
             data.night = GameProgress.Instance.CurrentNight;
-            data.money = GameProgress.Instance.CurrentMoney;
+            data.money = forceReset ? 0 : GameProgress.Instance.CurrentMoney;
+            data.errors = forceReset ? 0 : GameProgress.Instance.CurrentError;
         }
 
-        // 2. Get Position from Player
-        if (PlayerMovementMobileSmooth.Instance != null)
+        // 2. Get Rule Context Flags
+        if (RuleContext.Instance != null && !forceReset)
+        {
+            data.isLivingRoomLightOn = RuleContext.Instance.IsLivingRoomLightOn;
+            data.isBackDoorLocked = RuleContext.Instance.IsBackDoorLocked;
+            data.isDeliveryWaiting = RuleContext.Instance.IsDeliveryWaiting;
+        }
+        else
+        {
+            // Mặc định ban đầu
+            data.isLivingRoomLightOn = false;
+            data.isBackDoorLocked = true;
+            data.isDeliveryWaiting = false;
+        }
+
+        // 3. Scan and save Environmental Objects (Doors and Lights)
+        if (!forceReset)
+        {
+            DoorInteractable[] doors = Object.FindObjectsByType<DoorInteractable>(FindObjectsSortMode.None);
+            foreach (var door in doors)
+            {
+                data.envStates.Add(new ObjectState { name = door.gameObject.name, state = door.IsOpen });
+            }
+
+            LightSwitch[] switches = Object.FindObjectsByType<LightSwitch>(FindObjectsSortMode.None);
+            foreach (var ls in switches)
+            {
+                data.envStates.Add(new ObjectState { name = ls.gameObject.name, state = ls.IsOn });
+            }
+        }
+
+        // 4. Get Position from Player
+        if (PlayerMovementMobileSmooth.Instance != null && !forceReset)
         {
             Transform t = PlayerMovementMobileSmooth.Instance.transform;
             data.pX = t.position.x;
             data.pY = t.position.y;
             data.pZ = t.position.z;
             data.rotY = t.eulerAngles.y;
+            data.hasPosition = true;
+        }
+        else
+        {
+            data.hasPosition = false;
         }
 
         data.saveTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
-        // 3. Serialize and Write
+        // 5. Serialize and Write
         string json = JsonUtility.ToJson(data, true);
         File.WriteAllText(SavePath, json);
 
-        // Also update standard PlayerPrefs for some basic flags (legacy support/easy check)
         PlayerPrefs.SetInt("SavedNight", data.night);
         PlayerPrefs.Save();
 
-        Debug.Log($"[SaveSystem] Game Saved to {SavePath}. Night: {data.night}, Money: {data.money}");
+        Debug.Log($"[SaveSystem] Game Saved. Environment and Flags included.");
     }
 
     public static SaveData LoadGame()
@@ -95,5 +149,32 @@ public static class SaveSystem
     {
         SaveData data = LoadGame();
         return data != null ? data.night : 1;
+    }
+
+    public static void RestoreEnvironment(SaveData data)
+    {
+        if (data == null || data.envStates == null) return;
+
+        foreach (var state in data.envStates)
+        {
+            GameObject obj = GameObject.Find(state.name);
+            if (obj == null) continue;
+
+            DoorInteractable door = obj.GetComponent<DoorInteractable>();
+            if (door != null)
+            {
+                door.SetState(state.state);
+                continue;
+            }
+
+            LightSwitch ls = obj.GetComponent<LightSwitch>();
+            if (ls != null)
+            {
+                ls.SetState(state.state);
+                continue;
+            }
+        }
+
+        Debug.Log("[SaveSystem] Environment Restored.");
     }
 }

@@ -6,6 +6,7 @@ public class LightSwitch : MonoBehaviour, IInteractable
     [SerializeField] private Light[] targetLights;
 
     private bool isOn = false;
+    public bool IsOn => isOn; // Added for saving
 
     private void Start()
     {
@@ -50,7 +51,12 @@ public class LightSwitch : MonoBehaviour, IInteractable
 
     public void Toggle()
     {
-        isOn = !isOn;
+        SetState(!isOn);
+    }
+
+    public void SetState(bool state)
+    {
+        isOn = state;
         SetLights(isOn);
 
         if (isLivingRoomSwitch)

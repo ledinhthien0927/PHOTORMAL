@@ -25,6 +25,7 @@ public sealed class DoorInteractable : MonoBehaviour, IInteractable
     [SerializeField] private AudioClip closeSound;
 
     private bool isOpen;
+    public bool IsOpen => isOpen; // Added for saving
     private float currentAngle;
     private float targetAngle;
 
@@ -92,6 +93,17 @@ public sealed class DoorInteractable : MonoBehaviour, IInteractable
     {
         if (doorBlocker != null)
             doorBlocker.enabled = !open;
+    }
+
+    public void SetState(bool open)
+    {
+        isOpen = open;
+        targetAngle = isOpen ? openAngle : 0f;
+        currentAngle = targetAngle; // Instant set for loading
+        SetBlockerState(isOpen);
+        ApplyRotation();
+        
+        OnDoorStateChanged?.Invoke(isOpen); // Mới: Cập nhật các controller khác
     }
 
     public void SetLocked(bool value)
