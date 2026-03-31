@@ -21,13 +21,49 @@ public class PlayerMovementMobileSmooth : MonoBehaviour
     private CharacterController controller;
     private Vector3 verticalVelocity;
 
+    public static PlayerMovementMobileSmooth Instance; // Added for SaveSystem
+
     private void Awake()
     {
+        Instance = this;
         controller = GetComponent<CharacterController>();
+    }
 
-        // Recommended CharacterController settings for smoother wall sliding:
-        // Skin Width: 0.03 - 0.05
-        // Radius: 0.35 - 0.45 (depends on player scale)
+    public void Teleport(Vector3 targetPos, float rotationY)
+    {
+        if (controller != null)
+            controller.enabled = false; // Disable to allow manual transform set
+
+        transform.position = targetPos;
+        transform.rotation = Quaternion.Euler(0, rotationY, 0);
+
+        if (controller != null)
+            controller.enabled = true;
+        
+        Debug.Log($"[PlayerMovement] Teleported to {targetPos}");
+    }
+
+    private void Start()
+    {
+        // Kiểm tra xem có data chờ load (từ Main Menu) không
+        if (SaveSystem.pendingLoadData != null)
+        {
+            SaveData data = SaveSystem.pendingLoadData;
+
+            // 1. Phục hồi vị trí
+            Vector3 targetPos = new Vector3(data.pX, data.pY, data.pZ);
+            Teleport(targetPos, data.rotY);
+
+            // 2. Phục hồi tiền
+            if (GameProgress.Instance != null)
+            {
+                GameProgress.Instance.SetMoney(data.money);
+            }
+
+            // Xóa data chờ sau khi đã apply xong
+            SaveSystem.pendingLoadData = null;
+            Debug.Log("[PlayerMovement] Restore current progress from pendingLoadData.");
+        }
     }
 
     private void Update()

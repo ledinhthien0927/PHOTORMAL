@@ -132,4 +132,10 @@ public class GameProgress : MonoBehaviour
         ResetNightData();
         OnNightChanged?.Invoke(CurrentNight);
     }
+
+    public void SetMoney(int money)
+    {
+        CurrentMoney = money;
+        OnMoneyChanged?.Invoke(CurrentMoney);
+    }
 }

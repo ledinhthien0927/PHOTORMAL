@@ -52,7 +52,7 @@ public class NightManager : MonoBehaviour
         GameProgress.Instance.NextNight();
 
         // Save progress when successfully transitioning to next night
-        SaveSystem.SaveNight(GameProgress.Instance.CurrentNight);
+        SaveSystem.SaveGame();
 
         StartNight(GameProgress.Instance.CurrentNight);
     }

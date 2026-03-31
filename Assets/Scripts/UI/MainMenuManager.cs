@@ -60,13 +60,14 @@ public class MainMenuManager : MonoBehaviour
         Debug.Log("[MainMenuManager] Continue Clicked!");
         if (SaveSystem.HasSave())
         {
-            int savedNight = SaveSystem.LoadNight();
-            Debug.Log($"[MainMenuManager] Save found! Saved Night: {savedNight}");
-            LoadNight(savedNight);
+            SaveData data = SaveSystem.LoadGame();
+            SaveSystem.pendingLoadData = data; 
+            Debug.Log($"[MainMenuManager] Save found! Saved Night: {data.night}");
+            LoadNight(data.night);
         }
         else
         {
-            Debug.Log("[MainMenuManager] No save found in PlayerPrefs! Restarting from Night 1.");
+            Debug.Log("[MainMenuManager] No save found! Restarting from Night 1.");
             OnRestartClicked();
         }
     }
