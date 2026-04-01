@@ -104,4 +104,17 @@ public sealed class PrinterSupplyData : MonoBehaviour
 
         return string.Empty;
     }
+
+    public void LoadFromSaveData(SaveData data)
+    {
+        if (data == null) return;
+
+        currentPaper = data.currentPaper;
+        currentInk = data.currentInk;
+
+        OnPaperChanged?.Invoke(currentPaper);
+        OnInkChanged?.Invoke(currentInk);
+
+        Debug.Log($"[PrinterSupplyData] Supplies Loaded. Paper: {currentPaper}, Ink: {currentInk}");
+    }
 }

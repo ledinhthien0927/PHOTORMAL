@@ -4705,7 +4705,7 @@ MonoBehaviour:
   customerServiceTimeLimit: 45
   backDoorGracePeriod: 5
   footstepGracePeriod: 15
-  footstepHideTimeLimit: 10
+  footstepHideTimeLimit: 12.5
   twinsGracePeriod: 5
   clownGracePeriod: 19
   clownTimerText: {fileID: 0}

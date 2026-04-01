@@ -15,6 +15,10 @@ public class SaveData
     public int night = 1;
     public int money = 0;
     public int errors = 0; 
+
+    // Printer Supplies
+    public float currentPaper = 10f;
+    public float currentInk = 10f;
     
     // Rule Context Flags
     public bool isLivingRoomLightOn;
@@ -52,7 +56,20 @@ public static class SaveSystem
             data.errors = forceReset ? 0 : GameProgress.Instance.CurrentError;
         }
 
-        // 2. Get Rule Context Flags
+        // 2. Get Printer Supplies
+        if (PrinterSupplyData.Instance != null && !forceReset)
+        {
+            data.currentPaper = PrinterSupplyData.Instance.CurrentPaper;
+            data.currentInk = PrinterSupplyData.Instance.CurrentInk;
+        }
+        else
+        {
+            // Mặc định hoặc reset
+            data.currentPaper = 10f;
+            data.currentInk = 10f;
+        }
+
+        // 3. Get Rule Context Flags
         if (RuleContext.Instance != null && !forceReset)
         {
             data.isLivingRoomLightOn = RuleContext.Instance.IsLivingRoomLightOn;

@@ -147,6 +147,12 @@ public class GameProgress : MonoBehaviour
             RuleContext.Instance.IsDeliveryWaiting = data.isDeliveryWaiting;
         }
 
+        // Restore Printer Supplies
+        if (PrinterSupplyData.Instance != null)
+        {
+            PrinterSupplyData.Instance.LoadFromSaveData(data);
+        }
+
         OnNightChanged?.Invoke(CurrentNight);
         OnMoneyChanged?.Invoke(CurrentMoney);
         OnErrorChanged?.Invoke(CurrentError);
