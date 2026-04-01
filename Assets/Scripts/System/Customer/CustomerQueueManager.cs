@@ -146,6 +146,37 @@ public class CustomerQueueManager : MonoBehaviour
         currentCustomersAlive++;
     }
 
+    /// Lấy danh sách khách còn lại trong hàng đợi để lưu game
+    public List<SpawnEntry> GetRemainingQueue()
+    {
+        return new List<SpawnEntry>(spawnQueue);
+    }
+
+    /// Lấy số lượng thực thể đang active để chặn queue khi load
+    public int GetCurrentCustomersAlive()
+    {
+        return currentCustomersAlive;
+    }
+
+    /// Khôi phục hàng đợi từ file Save
+    public void RestoreQueueState(List<SpawnEntry> savedQueue, int activeCount)
+    {
+        StopAllCoroutines();
+        spawnQueue.Clear();
+        foreach (var entry in savedQueue)
+            spawnQueue.Enqueue(entry);
+        
+        currentCustomersAlive = activeCount;
+        isProcessing = false;
+        
+        Debug.Log($"[CustomerQueueManager] Restored Queue with {spawnQueue.Count} entries. Active: {currentCustomersAlive}");
+        
+        if (gameObject.activeInHierarchy)
+        {
+            StartCoroutine(ProcessQueueRoutine());
+        }
+    }
+
 
     /// In danh sách queue ra Console để debug.
     public void DebugDumpQueue()

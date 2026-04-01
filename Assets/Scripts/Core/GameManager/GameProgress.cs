@@ -145,12 +145,34 @@ public class GameProgress : MonoBehaviour
             RuleContext.Instance.IsLivingRoomLightOn = data.isLivingRoomLightOn;
             RuleContext.Instance.IsBackDoorLocked = data.isBackDoorLocked;
             RuleContext.Instance.IsDeliveryWaiting = data.isDeliveryWaiting;
+
+            // Mới: Khôi phục cờ Event
+            RuleContext.Instance.IsFootstepActive = data.isFootstepActive;
+            RuleContext.Instance.IsClownAppeared = data.isClownAppeared;
+            RuleContext.Instance.HasTwinsAppeared = data.hasTwinsAppeared;
+            RuleContext.Instance.IsFlickering = data.isFlickering;
         }
 
         // Restore Printer Supplies
         if (PrinterSupplyData.Instance != null)
         {
             PrinterSupplyData.Instance.LoadFromSaveData(data);
+        }
+
+        // Restore Customer Queue
+        if (CustomerQueueManager.Instance != null)
+        {
+            CustomerQueueManager.Instance.RestoreQueueState(data.remainingQueue, data.currentCustomersAlive);
+        }
+
+        // Re-trigger active events
+        if (EventManager.Instance != null)
+        {
+            if (data.isFootstepActive) EventManager.Instance.TriggerEvent("Footstep");
+            if (data.hasTwinsAppeared) EventManager.Instance.TriggerEvent("Twins");
+            // Clown event handling might need care if it involves models, 
+            // but TriggerEvent("Clown") should handle it.
+            if (data.isClownAppeared) EventManager.Instance.TriggerEvent("Clown");
         }
 
         OnNightChanged?.Invoke(CurrentNight);

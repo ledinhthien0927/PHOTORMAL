@@ -20,10 +20,19 @@ public class SaveData
     public float currentPaper = 10f;
     public float currentInk = 10f;
     
-    // Rule Context Flags
     public bool isLivingRoomLightOn;
     public bool isBackDoorLocked;
     public bool isDeliveryWaiting;
+
+    // Event Flags
+    public bool isFootstepActive;
+    public bool isClownAppeared;
+    public bool hasTwinsAppeared;
+    public bool isFlickering;
+
+    // Customer Queue State
+    public int currentCustomersAlive;
+    public List<CustomerQueueManager.SpawnEntry> remainingQueue = new List<CustomerQueueManager.SpawnEntry>();
 
     // Environmental States
     public List<ObjectState> envStates = new List<ObjectState>();
@@ -75,6 +84,12 @@ public static class SaveSystem
             data.isLivingRoomLightOn = RuleContext.Instance.IsLivingRoomLightOn;
             data.isBackDoorLocked = RuleContext.Instance.IsBackDoorLocked;
             data.isDeliveryWaiting = RuleContext.Instance.IsDeliveryWaiting;
+
+            // Mới: Thu thập trạng thái Event
+            data.isFootstepActive = RuleContext.Instance.IsFootstepActive;
+            data.isClownAppeared = RuleContext.Instance.IsClownAppeared;
+            data.hasTwinsAppeared = RuleContext.Instance.HasTwinsAppeared;
+            data.isFlickering = RuleContext.Instance.IsFlickering;
         }
         else
         {
@@ -82,9 +97,26 @@ public static class SaveSystem
             data.isLivingRoomLightOn = false;
             data.isBackDoorLocked = true;
             data.isDeliveryWaiting = false;
+
+            data.isFootstepActive = false;
+            data.isClownAppeared = false;
+            data.hasTwinsAppeared = false;
+            data.isFlickering = false;
         }
 
-        // 3. Scan and save Environmental Objects (Doors and Lights)
+        // 4. Get Customer Queue State
+        if (CustomerQueueManager.Instance != null && !forceReset)
+        {
+            data.remainingQueue = CustomerQueueManager.Instance.GetRemainingQueue();
+            data.currentCustomersAlive = CustomerQueueManager.Instance.GetCurrentCustomersAlive();
+        }
+        else
+        {
+            data.remainingQueue = new List<CustomerQueueManager.SpawnEntry>();
+            data.currentCustomersAlive = 0;
+        }
+
+        // 5. Scan and save Environmental Objects (Doors and Lights)
         if (!forceReset)
         {
             DoorInteractable[] doors = Object.FindObjectsByType<DoorInteractable>(FindObjectsSortMode.None);
