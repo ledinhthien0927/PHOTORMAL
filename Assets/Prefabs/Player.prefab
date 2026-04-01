@@ -748,7 +748,7 @@ MonoBehaviour:
   cam: {fileID: 7574091106560985346}
   interactMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 2039
   inventory: {fileID: 5892326734365069626}
   holdPoint: {fileID: 3064800372303398818}
 --- !u!114 &6931502850452374832
