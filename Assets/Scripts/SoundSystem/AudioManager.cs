@@ -159,6 +159,16 @@ public sealed class AudioManager : MonoBehaviour
         }
     }
 
+    /// <summary> Dừng toàn bộ âm thanh liên quan đến sự kiện (bước chân, hề, gõ cửa) khi game over/pause </summary>
+    public void StopAllRuleSounds()
+    {
+        if (footstepSource != null && footstepSource.isPlaying) footstepSource.Stop();
+        if (clownAppearSource != null && clownAppearSource.isPlaying) clownAppearSource.Stop();
+        if (knockDoorSource != null && knockDoorSource.isPlaying) knockDoorSource.Stop();
+        
+        Debug.Log("[AudioManager] Stopped all rule-related sounds (Footsteps, Clown, Knock).");
+    }
+
     public void SetFootstepVolume(float volume)
     {
         if (footstepSource != null)

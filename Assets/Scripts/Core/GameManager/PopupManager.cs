@@ -96,6 +96,9 @@ public class PopupManager : MonoBehaviour, IGameEvent
             Time.timeScale = 0f;
             if (gameplayCanvas != null) gameplayCanvas.SetActive(false);
             
+            // Dừng toàn bộ âm thanh chân/hề khi hiện Popup
+            if (AudioManager.Instance != null) AudioManager.Instance.StopAllRuleSounds();
+            
             // Start fade animation
             StartCoroutine(FadeInCoroutine(popup));
         }
