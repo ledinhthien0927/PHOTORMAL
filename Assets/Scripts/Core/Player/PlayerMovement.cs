@@ -43,34 +43,6 @@ public class PlayerMovementMobileSmooth : MonoBehaviour
         Debug.Log($"[PlayerMovement] Teleported to {targetPos}");
     }
 
-    private void Start()
-    {
-        // Kiểm tra xem có data chờ load (từ Main Menu) không
-        if (SaveSystem.pendingLoadData != null)
-        {
-            SaveData data = SaveSystem.pendingLoadData;
-
-            // 1. Phục hồi vị trí (Chỉ khi data có vị trí cụ thể)
-            if (data.hasPosition)
-            {
-                Vector3 targetPos = new Vector3(data.pX, data.pY, data.pZ);
-                Teleport(targetPos, data.rotY);
-            }
-
-            // 2. Phục hồi tiền và các stats khác
-            if (GameProgress.Instance != null)
-            {
-                GameProgress.Instance.LoadFromSaveData(data);
-            }
-
-            // 3. Phục hồi môi trường (Cửa, Đèn...)
-            SaveSystem.RestoreEnvironment(data);
-
-            // Xóa data chờ sau khi đã apply xong
-            SaveSystem.pendingLoadData = null;
-            Debug.Log("[PlayerMovement] Restore current progress \u0026 environment from pendingLoadData.");
-        }
-    }
 
     private void Update()
     {
