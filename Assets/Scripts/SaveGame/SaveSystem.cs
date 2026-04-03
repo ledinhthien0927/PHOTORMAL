@@ -42,6 +42,22 @@ public class SaveData
     public float pX, pY, pZ;
     public float rotY;
 
+    [System.Serializable]
+    public class CustomerSaveData
+    {
+        public bool exists = false;
+        public string prefabName = "";
+        public float pX, pY, pZ;
+        public float rotY;
+        public CustomerController.CustomerState state;
+        public bool isClown;
+        public bool willTriggerFlicker;
+        public PhotoOrder currentOrder;
+        public bool hasPhotoTaken;
+    }
+
+    public CustomerSaveData activeCustomer = new CustomerSaveData();
+
     // Meta
     public string saveTime;
 }
@@ -109,11 +125,30 @@ public static class SaveSystem
         {
             data.remainingQueue = CustomerQueueManager.Instance.GetRemainingQueue();
             data.currentCustomersAlive = CustomerQueueManager.Instance.GetCurrentCustomersAlive();
+
+            // Mới: Lưu data của active customer đang ở trong scene
+            CustomerController activeCust = CustomerQueueManager.Instance.GetActiveCustomer();
+            if (activeCust != null)
+            {
+                data.activeCustomer.exists = true;
+                data.activeCustomer.prefabName = activeCust.prefabName;
+                data.activeCustomer.pX = activeCust.transform.position.x;
+                data.activeCustomer.pY = activeCust.transform.position.y;
+                data.activeCustomer.pZ = activeCust.transform.position.z;
+                data.activeCustomer.rotY = activeCust.transform.eulerAngles.y;
+                
+                data.activeCustomer.state = activeCust.State;
+                data.activeCustomer.isClown = activeCust.isClown;
+                data.activeCustomer.willTriggerFlicker = activeCust.WillTriggerFlicker;
+                data.activeCustomer.currentOrder = activeCust.GetCurrentOrder();
+                data.activeCustomer.hasPhotoTaken = activeCust.HasPhotoTaken;
+            }
         }
         else
         {
             data.remainingQueue = new List<CustomerQueueManager.SpawnEntry>();
             data.currentCustomersAlive = 0;
+            data.activeCustomer.exists = false;
         }
 
         // 5. Scan and save Environmental Objects (Doors and Lights)

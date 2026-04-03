@@ -73,6 +73,7 @@ public class CustomerQueueManager : MonoBehaviour
     private Queue<SpawnEntry> spawnQueue = new Queue<SpawnEntry>();
     private bool isProcessing = false;
     private int currentCustomersAlive = 0;
+    private CustomerController activeCustomer;
 
     // ==========================================
     // UNITY LIFECYCLE
@@ -130,7 +131,7 @@ public class CustomerQueueManager : MonoBehaviour
             Debug.LogWarning("[CustomerQueueManager] CustomerSpawner chưa được gán!");
             return;
         }
-        customerSpawner.SpawnNormalCustomer(willFlicker);
+        activeCustomer = customerSpawner.SpawnNormalCustomer(willFlicker);
         currentCustomersAlive++;
     }
 
@@ -142,8 +143,13 @@ public class CustomerQueueManager : MonoBehaviour
             Debug.LogWarning("[CustomerQueueManager] CustomerSpawner chưa được gán!");
             return;
         }
-        customerSpawner.SpawnClownCustomer();
+        activeCustomer = customerSpawner.SpawnClownCustomer();
         currentCustomersAlive++;
+    }
+
+    public CustomerController GetActiveCustomer()
+    {
+        return activeCustomer;
     }
 
     /// Lấy danh sách khách còn lại trong hàng đợi để lưu game
@@ -166,14 +172,43 @@ public class CustomerQueueManager : MonoBehaviour
         foreach (var entry in savedQueue)
             spawnQueue.Enqueue(entry);
         
-        currentCustomersAlive = activeCount;
+        // Luôn đặt về 0 — RestoreActiveCustomer sẽ set lại = 1 nếu thật sự có customer được khôi phục.
+        // Nếu không reset về 0, queue sẽ chờ mãi cho entity không tồn tại.
+        currentCustomersAlive = 0;
         isProcessing = false;
         
-        Debug.Log($"[CustomerQueueManager] Restored Queue with {spawnQueue.Count} entries. Active: {currentCustomersAlive}");
+        Debug.Log($"[CustomerQueueManager] Restored Queue with {spawnQueue.Count} entries. Active reset to 0.");
         
         if (gameObject.activeInHierarchy)
         {
             StartCoroutine(ProcessQueueRoutine());
+        }
+    }
+
+    public void RestoreActiveCustomer(SaveData.CustomerSaveData data)
+    {
+        if (data == null || !data.exists || customerSpawner == null) return;
+
+        Debug.Log($"[CustomerQueueManager] Re-spawning active customer: PrefabName={data.prefabName}, IsClown={data.isClown}");
+        
+        Vector3 pos = new Vector3(data.pX, data.pY, data.pZ);
+        Quaternion rot = Quaternion.Euler(0, data.rotY, 0);
+
+        if (data.isClown)
+        {
+            activeCustomer = customerSpawner.SpawnClownCustomerAt(pos, rot);
+        }
+        else
+        {
+            activeCustomer = customerSpawner.SpawnByPrefabName(data.prefabName, pos, rot);
+        }
+
+        if (activeCustomer != null)
+        {
+            activeCustomer.RestoreState(data.currentOrder, data.state, data.willTriggerFlicker, data.hasPhotoTaken, pos, data.rotY);
+            
+            // Đảm bảo logic currentCustomersAlive khớp (thường là 1 nếu có customer)
+            currentCustomersAlive = 1;
         }
     }
 
@@ -335,14 +370,14 @@ public class CustomerQueueManager : MonoBehaviour
                 Debug.Log($"[CustomerQueueManager] Spawn: Normal Customer (WillFlicker: {entry.WillFlicker})");
                 if (customerSpawner != null)
                 {
-                    customerSpawner.SpawnNormalCustomer(entry.WillFlicker);
+                    activeCustomer = customerSpawner.SpawnNormalCustomer(entry.WillFlicker);
                     currentCustomersAlive++;
                 }
                 break;
 
             case SpawnEntryType.TwinsEvent:
                 Debug.Log("[CustomerQueueManager] Spawn: Twins Event (Tuần tự)");
-                currentCustomersAlive++; // Chặn queue cho đến khi Twins biến mất
+                // Chặn queue thông qua listener của OnTwinsPresenceChanged
                 if (EventManager.Instance != null)
                     EventManager.Instance.TriggerEvent("Twins");
                 break;
@@ -356,7 +391,7 @@ public class CustomerQueueManager : MonoBehaviour
 
             case SpawnEntryType.FootstepEvent:
                 Debug.Log("[CustomerQueueManager] Spawn: Footstep Event (Tuần tự)");
-                currentCustomersAlive++; // Chặn queue cho đến khi hết tiếng chân
+                // Chặn queue thông qua listener của OnFootstepToggled
                 if (EventManager.Instance != null)
                     EventManager.Instance.TriggerEvent("Footstep");
                 break;
@@ -376,11 +411,17 @@ public class CustomerQueueManager : MonoBehaviour
 
     private void HandleTwinsEnd(bool isPresent)
     {
-        if (!isPresent) OnEventEntityCompleted();
+        if (isPresent) 
+            currentCustomersAlive++; // Chặn queue khi cặp sinh đôi xuất hiện
+        else 
+            OnEventEntityCompleted(); // Giải phóng khi cặp sinh đôi biến mất
     }
 
     private void HandleFootstepEnd(bool isPlaying)
     {
-        if (!isPlaying) OnEventEntityCompleted();
+        if (isPlaying)
+            currentCustomersAlive++; // Chặn queue khi tiếng bước chân đang phát
+        else
+            OnEventEntityCompleted(); // Giải phóng khi hết tiếng bước chân
     }
 }

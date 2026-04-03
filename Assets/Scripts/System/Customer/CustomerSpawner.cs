@@ -81,12 +81,12 @@ public class CustomerSpawner : MonoBehaviour
     }
 
     [ContextMenu("Spawn Normal Customer")]
-    public void SpawnNormalCustomer(bool willFlicker = false)
+    public CustomerController SpawnNormalCustomer(bool willFlicker = false)
     {
         if (normalCustomerPrefabs.Count == 0 || !spawnPoint || !standByPC || !photoSpot || !exitPoint || !outsidePoint || !insidePoint)
         {
             Debug.LogError("[CustomerSpawner] Missing prefab list/spawnPoint/standByPC/photoSpot/exitPoint/outsidePoint/insidePoint.");
-            return;
+            return null;
         }
 
         if (currentIndex >= normalCustomerPrefabs.Count)
@@ -104,25 +104,55 @@ public class CustomerSpawner : MonoBehaviour
             spawnPoint.rotation
         );
 
+        customer.prefabName = prefab.name; // Lưu tên prefab gốc (trước khi Unity thêm "(Clone)")
         customer.willTriggerFlicker = willFlicker;
         customer.Init(standByPC, mainDoorBlocker, photoSpot, exitPoint, outsidePoint, insidePoint);
         customer.SetOrderService(orderService);
         customer.SetPlayer(player);
+
+        return customer;
     }
 
-    public void SpawnClownCustomer()
+    /// <summary>Spawn khách bình thường theo tên prefab (dùng khi restore save).</summary>
+    public CustomerController SpawnByPrefabName(string targetPrefabName, Vector3 pos, Quaternion rot)
+    {
+        CustomerController prefab = null;
+        foreach (var p in normalCustomerPrefabs)
+        {
+            if (p.name == targetPrefabName)
+            {
+                prefab = p;
+                break;
+            }
+        }
+
+        if (prefab == null)
+        {
+            Debug.LogWarning($"[CustomerSpawner] Prefab '{targetPrefabName}' not found! Spawning random customer.");
+            return SpawnNormalCustomer();
+        }
+
+        CustomerController customer = Instantiate(prefab, pos, rot);
+        customer.prefabName = prefab.name;
+        customer.Init(standByPC, mainDoorBlocker, photoSpot, exitPoint, outsidePoint, insidePoint);
+        customer.SetOrderService(orderService);
+        customer.SetPlayer(player);
+
+        return customer;
+    }
+
+    public CustomerController SpawnClownCustomer()
     {
         if (clownCustomerPrefab == null)
         {
             Debug.LogWarning("[CustomerSpawner] ClownCustomerPrefab is null, spawning normal customer instead.");
-            SpawnNormalCustomer();
-            return;
+            return SpawnNormalCustomer();
         }
 
         if (!spawnPoint || !standByPC || !photoSpot || !exitPoint || !outsidePoint || !insidePoint)
         {
             Debug.LogError("[CustomerSpawner] Missing spawnPoint/standByPC/photoSpot/exitPoint/outsidePoint/insidePoint.");
-            return;
+            return null;
         }
 
         CustomerController customer = Instantiate(
@@ -131,9 +161,27 @@ public class CustomerSpawner : MonoBehaviour
             spawnPoint.rotation
         );
 
+        customer.prefabName = clownCustomerPrefab.name;
         customer.isClown = true;
         customer.Init(standByPC, mainDoorBlocker, photoSpot, exitPoint, outsidePoint, insidePoint);
         customer.SetOrderService(orderService);
         customer.SetPlayer(player);
+
+        return customer;
     }
-}
+
+    public CustomerController SpawnClownCustomerAt(Vector3 pos, Quaternion rot)
+    {
+        if (clownCustomerPrefab == null) return null;
+
+        CustomerController customer = Instantiate(clownCustomerPrefab, pos, rot);
+        
+        customer.prefabName = clownCustomerPrefab.name;
+        customer.isClown = true;
+        customer.Init(standByPC, mainDoorBlocker, photoSpot, exitPoint, outsidePoint, insidePoint);
+        customer.SetOrderService(orderService);
+        customer.SetPlayer(player);
+
+        return customer;
+    }
+}

@@ -65,6 +65,9 @@ public class CustomerController : MonoBehaviour, IInteractable
     private bool hasPhotoTaken;
     private bool listeningPhotoEvent;
     private bool isInvitePromptVisible;
+    
+    [Header("Save/Restore")]
+    public string prefabName = ""; // Tên prefab gốc, dùng để khôi phục đúng model
 
     private Coroutine enterFlowRoutine;
     private Coroutine exitFlowRoutine;
@@ -188,43 +191,111 @@ public class CustomerController : MonoBehaviour, IInteractable
         player = playerTransform;
     }
 
+    public void RestoreState(PhotoOrder order, CustomerState savedState, bool flick, bool photoTaken, Vector3 pos, float rotY)
+    {
+        // Quan trọng: Dừng tất cả coroutine đang chạy (do Init() đã khởi động EnterFlowRoutine)
+        StopAllCoroutines();
+        enterFlowRoutine = null;
+        exitFlowRoutine = null;
+
+        this.currentOrder = order;
+        this.state = savedState;
+        this.willTriggerFlicker = flick;
+        this.hasPhotoTaken = photoTaken;
+
+        EnsureAgentOnNavMesh();
+        agent.Warp(pos);
+        transform.rotation = Quaternion.Euler(0, rotY, 0);
+
+        Debug.Log($"[CustomerController] Restored to state: {state} at {pos}");
+
+        // Resume routines
+        if (state >= CustomerState.GoingToInside)
+        {
+            exitFlowRoutine = StartCoroutine(ExitFlowRoutine());
+        }
+        else if (state < CustomerState.WaitingPickupAtPC)
+        {
+            enterFlowRoutine = StartCoroutine(EnterFlowRoutine());
+        }
+
+        // Re-setup interaction logic
+        if (state == CustomerState.WaitingPickupAtPC)
+        {
+            SpawnPopupForOrder();
+        }
+        else if (state == CustomerState.WaitingShootDone)
+        {
+            if (StudioManager.Instance != null)
+                StudioManager.Instance.SetCurrentCustomer(this);
+            NotifyReady(true);
+            StartListeningPhotoCaptured();
+        }
+        else if (state == CustomerState.ReturningToPC || state == CustomerState.WaitingPrintAtPC)
+        {
+            if (StudioManager.Instance != null)
+                StudioManager.Instance.UnlockPrinting();
+            
+            if (state == CustomerState.WaitingPrintAtPC)
+                ShowOrderPopupAgain();
+        }
+        
+        // Resume travel destinations if applicable
+        if (state == CustomerState.GoingToOutside) MoveTo(outsidePoint.position);
+        if (state == CustomerState.GoingToPC) MoveTo(standByPC.position);
+        if (state == CustomerState.GoingToPhotoSpot) MoveTo(photoSpot.position);
+        if (state == CustomerState.ReturningToPC) MoveTo(standByPC.position);
+        if (state == CustomerState.GoingToInside) MoveTo(insidePoint.position);
+        if (state == CustomerState.GoingToExit) MoveTo(exitPoint.position);
+    }
+
     private IEnumerator EnterFlowRoutine()
     {
-        yield return new WaitForSeconds(firstCheckDelay);
+        if (state == CustomerState.WaitingDoorCheck)
+        {
+            yield return new WaitForSeconds(firstCheckDelay);
+            state = CustomerState.WaitingDoorOpen;
+        }
 
         if (agent == null || standByPC == null || outsidePoint == null)
             yield break;
 
         EnsureAgentOnNavMesh();
 
-        state = CustomerState.WaitingDoorOpen;
-
-        while (IsMainDoorClosed())
-            yield return new WaitForSeconds(recheckInterval);
-
-        MoveTo(outsidePoint.position);
-        state = CustomerState.GoingToOutside;
-
-        while (state == CustomerState.GoingToOutside)
+        if (state == CustomerState.WaitingDoorOpen)
         {
-            if (ReachedDestination())
-            {
-                StopMovement();
-                state = CustomerState.WaitingOutsideDoorOpen;
-                break;
-            }
+            while (IsMainDoorClosed())
+                yield return new WaitForSeconds(recheckInterval);
 
-            yield return null;
+            MoveTo(outsidePoint.position);
+            state = CustomerState.GoingToOutside;
         }
 
-        while (state == CustomerState.WaitingOutsideDoorOpen && IsMainDoorClosed())
-            yield return new WaitForSeconds(recheckInterval);
+        if (state == CustomerState.GoingToOutside)
+        {
+            while (state == CustomerState.GoingToOutside)
+            {
+                if (ReachedDestination())
+                {
+                    StopMovement();
+                    state = CustomerState.WaitingOutsideDoorOpen;
+                    break;
+                }
+                yield return null;
+            }
+        }
 
-        if (state != CustomerState.WaitingOutsideDoorOpen)
-            yield break;
+        if (state == CustomerState.WaitingOutsideDoorOpen)
+        {
+            while (state == CustomerState.WaitingOutsideDoorOpen && IsMainDoorClosed())
+                yield return new WaitForSeconds(recheckInterval);
 
-        MoveTo(standByPC.position);
-        state = CustomerState.GoingToPC;
+            if (state != CustomerState.WaitingOutsideDoorOpen)
+                yield break;
+
+            MoveTo(standByPC.position);
+            state = CustomerState.GoingToPC;
+        }
     }
 
     private IEnumerator ExitFlowRoutine()
@@ -234,29 +305,37 @@ public class CustomerController : MonoBehaviour, IInteractable
 
         EnsureAgentOnNavMesh();
 
-        MoveTo(insidePoint.position);
-        state = CustomerState.GoingToInside;
-
-        while (state == CustomerState.GoingToInside)
+        if (state < CustomerState.GoingToInside)
         {
-            if (ReachedDestination())
-            {
-                StopMovement();
-                state = CustomerState.WaitingInsideDoorOpen;
-                break;
-            }
-
-            yield return null;
+            MoveTo(insidePoint.position);
+            state = CustomerState.GoingToInside;
         }
 
-        while (state == CustomerState.WaitingInsideDoorOpen && IsMainDoorClosed())
-            yield return new WaitForSeconds(recheckInterval);
+        if (state == CustomerState.GoingToInside)
+        {
+            while (state == CustomerState.GoingToInside)
+            {
+                if (ReachedDestination())
+                {
+                    StopMovement();
+                    state = CustomerState.WaitingInsideDoorOpen;
+                    break;
+                }
+                yield return null;
+            }
+        }
 
-        if (state != CustomerState.WaitingInsideDoorOpen)
-            yield break;
+        if (state == CustomerState.WaitingInsideDoorOpen)
+        {
+            while (state == CustomerState.WaitingInsideDoorOpen && IsMainDoorClosed())
+                yield return new WaitForSeconds(recheckInterval);
 
-        MoveTo(exitPoint.position);
-        state = CustomerState.GoingToExit;
+            if (state != CustomerState.WaitingInsideDoorOpen)
+                yield break;
+
+            MoveTo(exitPoint.position);
+            state = CustomerState.GoingToExit;
+        }
     }
 
     private void Update()
@@ -697,6 +776,10 @@ public class CustomerController : MonoBehaviour, IInteractable
 
         Debug.Log($"{name} received printed photo directly.");
     }
+
+    public CustomerState State => state;
+    public bool HasPhotoTaken => hasPhotoTaken;
+    public bool WillTriggerFlicker => willTriggerFlicker;
 
     private void HandleClownDisappeared()
     {
