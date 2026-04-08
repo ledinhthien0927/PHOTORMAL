@@ -176,7 +176,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 399d614e1acdc3a4aa65b525ff0df855, type: 3}
+  m_Sprite: {fileID: 21300000, guid: a474e0af1455bc44bb80baa90aea689c, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -616,6 +616,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sceneToLoad: MainMenu
+  useFirstTimeOverride: 1
+  firstTimeScene: HowToPlay
+  firstTimeKey: HasSeenHowToPlay
   fadeOverlay: {fileID: 472321505}
   fadeOutDuration: 0.6
   disableButtonWhileLoading: 1

@@ -4,7 +4,7 @@ using UnityEngine;
 public class PlayerMovementMobileSmooth : MonoBehaviour
 {
     [Header("Input")]
-    public FixedJoystick joystick; // Keep using the existing FixedJoystick system
+    public Joystick joystick; // Changed to base Joystick class to support Floating/Dynamic joysticks
 
     [Header("Movement")]
     public float moveSpeed = 4.5f;
