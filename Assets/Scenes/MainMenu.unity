@@ -775,6 +775,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sceneToLoad: Night_01
+  useFirstTimeOverride: 1
+  firstTimeScene: HowToPlay
+  firstTimeKey: HasSeenHowToPlay
   fadeOverlay: {fileID: 1189474377}
   fadeOutDuration: 0.6
   disableButtonWhileLoading: 1
@@ -1294,6 +1297,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sceneToLoad: Setting
+  useFirstTimeOverride: 1
+  firstTimeScene: HowToPlay
+  firstTimeKey: HasSeenHowToPlay
   fadeOverlay: {fileID: 1189474377}
   fadeOutDuration: 0.6
   disableButtonWhileLoading: 1
@@ -1456,6 +1462,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sceneToLoad: HowToPlay
+  useFirstTimeOverride: 1
+  firstTimeScene: HowToPlay
+  firstTimeKey: HasSeenHowToPlay
   fadeOverlay: {fileID: 1189474377}
   fadeOutDuration: 0.6
   disableButtonWhileLoading: 1
@@ -1697,6 +1706,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sceneToLoad: Night_01
+  useFirstTimeOverride: 1
+  firstTimeScene: HowToPlay
+  firstTimeKey: HasSeenHowToPlay
   fadeOverlay: {fileID: 1189474377}
   fadeOutDuration: 0.6
   disableButtonWhileLoading: 1

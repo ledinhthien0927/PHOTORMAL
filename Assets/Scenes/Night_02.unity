@@ -3581,10 +3581,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 400697649}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 22.102417, y: -1.5094}
-  m_SizeDelta: {x: 2206.4658, y: 1020.8}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -5.2716064, y: 1.7572021}
+  m_SizeDelta: {x: 66.7723, y: 59.7435}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &355713951
 MonoBehaviour:
@@ -3808,7 +3808,7 @@ MonoBehaviour:
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -4259,7 +4259,7 @@ MonoBehaviour:
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -5236,7 +5236,7 @@ MonoBehaviour:
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -8243,10 +8243,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 454195483}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 13.684814, y: 0}
-  m_SizeDelta: {x: 2123.7473, y: 1080}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 1.7570801, y: -0.00012207031}
+  m_SizeDelta: {x: 59.7438, y: 56.2292}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1090544006
 MonoBehaviour:
@@ -17566,7 +17566,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2013516714169850947, guid: 5f758d86d15a885469ed5cf59747cb15, type: 3}
       propertyPath: m_MatchWidthOrHeight
-      value: 0
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 2013516714169850947, guid: 5f758d86d15a885469ed5cf59747cb15, type: 3}
       propertyPath: m_ReferenceResolution.x
